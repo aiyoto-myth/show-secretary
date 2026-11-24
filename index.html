@@ -60,7 +60,9 @@ section.tab[hidden]{display:none}
 .panel h3{font-size:19px;margin:14px 0 6px}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
 label.f{display:flex;flex-direction:column;gap:3px;font-weight:700;font-size:15px;max-width:100%}
-select{max-width:100%}
+select{max-width:100%;min-width:0}
+.row > *{min-width:0;max-width:100%}
+#rSec{max-width:min(100%,60vw)}
 label.f small{font-weight:400}
 input[type=text],input[type=number],input[type=date],input[type=email],select,textarea{border:1.5px solid #b9ab88;border-radius:8px;padding:8px 10px;background:#fff;min-height:42px}
 input.num{width:84px;font-variant-numeric:tabular-nums}
@@ -111,10 +113,12 @@ textarea{width:100%;min-height:170px;font-size:16px;line-height:1.4}
 
 /* results: one strip per class, place boxes coloured like prize cards */
 .rlist{display:flex;flex-direction:column;gap:6px}
-.rrow{display:grid;grid-template-columns:minmax(170px,1.2fr) repeat(var(--places),minmax(92px,1fr)) auto;gap:8px;align-items:center;background:#fff;border:1px solid var(--rule2);border-radius:8px;padding:6px 8px}
+.rrow{display:grid;grid-template-columns:minmax(170px,1.2fr) repeat(var(--places),minmax(72px,1fr)) auto;gap:8px;align-items:center;background:#fff;border:1px solid var(--rule2);border-radius:8px;padding:6px 8px}
 .rrow .ct b{font-family:"Young Serif",Georgia,serif;font-size:19px;margin-right:6px}
 .rrow .ct small{display:block;color:var(--soft)}
 .pbox{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pbox input{min-width:0}
+.rrow .ct{min-width:0;overflow-wrap:anywhere}
 .pbox input{width:100%;min-height:40px;text-align:center;font-weight:700;font-size:18px;border-width:2px;border-left-width:8px}
 .pbox .who{font-size:13px;min-height:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .p0 input{border-left-color:var(--first)} .p1 input{border-left-color:var(--second)} .p2 input{border-left-color:var(--third)} .p3 input{border-left-color:var(--hc)}
@@ -147,7 +151,7 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
   .welcome{grid-template-columns:1fr}
   .brand h1{font-size:25px}
   .tally{margin-left:0}
-  .rrow{grid-template-columns:repeat(var(--places),1fr);}
+  .rrow{grid-template-columns:repeat(var(--places),minmax(0,1fr));}
   .rrow .ct{grid-column:1/-1}
   .rrow label.na{grid-column:1/-1}
   .tbl.stack thead{display:none}
@@ -478,11 +482,12 @@ function parseList(text, known, multi){
 var RULE_HEAD = /^(general\s+)?(rules|regulations|conditions(\s+of\s+entry)?|notes?\s+(to|for)\s+exhibitors|timetable|programme|show\s+rules|important\s+information|information\s+for\s+exhibitors)\b/i;
 var PROSE = /\b(must|shall|should|will be|may not|is final|please|entries close|closing date|no exhibitor|exhibitors? (may|are|will|must|can)|at the discretion|are not|is not|will not)\b/i;
 var RULE_SUBJECT = /^(all|any|exhibits?|exhibitors?|entries|entry|the judges?|judges?|judging|no\b|prizes?|prize money|each exhibitor|stewards?|cars?|dogs?|the (committee|society|show)|committee|members?|staging|exhibitors'?)\b/i;
+var QTY = /^\d{1,2}\s+(blooms?|stems?|spikes?|sprays?|heads?|fruits?|pods?|tubers?|roots?|sticks?|specimens?|cultivars?|varieties|kinds?|pieces?|items?|exhibits?|entries|vases?|jars?|bottles?|pots?|plants?|trusses?|florets?|leaves|sprigs?)\b/i;
 var NOT_SECTION = /^(steward|stewards|secretary|convenor|convener|judge|judges|superintendent|chair|chairman|chairperson|contact|entries)\b/i;
 var SEC_KEY = /^(section|division|dept\.?|department|category|part)(?:\s+(.*)|\s*([-–—:.)].*))$/i;
 function sectionLine(line){
   var k = SEC_KEY.exec(line); if(!k) return null;
-  var rest = (k[2] || k[3] || '').trim(); if(NOT_SECTION.test(rest.replace(/^[A-Z]{1,2}\s+(?=[A-Z])/, '')) || (PROSE.test(line) && line.length > 60)) return null;
+  var rest = (k[2] || k[3] || '').trim(); if(NOT_SECTION.test(rest.replace(/^[A-Z]{1,2}\s+(?=[A-Z])/, '')) || PROSE.test(line) || /\bwill\b/i.test(rest)) return null;
   var m = /^([A-Z]{1,2}|\d{1,2}|[IVX]{1,4})(?=\s|[-–—:.)]|$)\s*[-–—:.)]?\s*(.*)$/.exec(rest);
   if(m) return {code: m[1].toUpperCase(), name: m[2].replace(/[:.\s]+$/, '').trim() || ('Section ' + m[1])};
   if(/^[-–—:.)]/.test(rest)) return {code: '', name: rest.replace(/^[-–—:.)\s]+/, '').replace(/[:.\s]+$/, '').trim()};
@@ -490,7 +495,7 @@ function sectionLine(line){
   return null;
 }
 function parseSchedule(text){
-  var sections = [], classes = [], skipped = [], renamed = [], showMoney = null, cur = null, codes = {}, rules = false, pendingCode = null;
+  var sections = [], classes = [], skipped = [], renamed = [], joined = [], showMoney = null, cur = null, codes = {}, rules = false, pendingCode = null;
   function newSection(code, name){ cur = {code: code || '', name: tidyName(name), money: null}; sections.push(cur); rules = false; }
   function addClass(code, title){
     title = title.trim(); var money = null;
@@ -514,7 +519,7 @@ function parseSchedule(text){
     if(sl && sl.name.length <= 70){ newSection(sl.code, sl.name || ('Section ' + (sections.length + 1))); pendingCode = null; return; }
     var m;
     var bare = line.replace(/\([^)]*\)/g, '').trim();
-    if(RULE_HEAD.test(line) && line.length < 60 && !/^\d/.test(line)){ rules = true; pendingCode = null; skipped.push(line); return; }
+    if((RULE_HEAD.test(line) || /\b(rules|regulations|conditions)\s*:?$/i.test(line)) && line.length < 60 && !/^\d/.test(line)){ rules = true; pendingCode = null; skipped.push(line); return; }
     var pm = prizeLine(line);
     if(pm){ if(cur) cur.money = pm; else showMoney = pm; skipped.push(line); return; }
     if(/^[A-Z][A-Z &'’,\-–\/]{3,60}$/.test(bare) && !/PRIZE|RULE|ENTR(Y|IES)|NOTE|JUDG|SCHEDULE|TROPH|CUPS|AWARD|CONDITION|REGULATION/.test(bare)){ newSection('', line); pendingCode = null; return; }
@@ -524,16 +529,16 @@ function parseSchedule(text){
     if(only){ pendingCode = only[1]; return; }
     if(/^(19|20)\d\d\b/.test(line) || /^\d{1,2}[.:]\d{2}\b/.test(line) || /^[A-Z]{1,2}\d[A-Z\d]?\s+\d[A-Z]{2}\b/.test(line)){ skipped.push(line); return; }
     m = /^(?:class\s*)?([A-Za-z]{0,3}\d{1,4}[A-Za-z]?)\s*(?:[.):\-–—]\s*|\s+)(.{2,})$/i.exec(line);
-    var ruleLike = m && (RULE_SUBJECT.test(m[2]) || (!cur && PROSE.test(m[2])));
+    var ruleLike = m && (cur ? (RULE_SUBJECT.test(m[2]) && PROSE.test(m[2])) : (RULE_SUBJECT.test(m[2]) || PROSE.test(m[2])));
     if(m && !/^\d{1,4}(st|nd|rd|th)\b/i.test(line) && /[A-Za-z]{2}/.test(m[2]) && !ruleLike && m[2].length <= 120){
-      if(/^\d{1,2}\s+[a-z]/.test(line) && m[2].length < 30 && classes.length && classes[classes.length - 1].section === cur){ var lc = classes[classes.length - 1]; lc.title += ', ' + m1(m) ; return; }
+      if(QTY.test(line) && classes.length && classes[classes.length - 1].section === cur){ var lc = classes[classes.length - 1]; lc.title += ', ' + m1(m); joined.push(lc.code + ': ' + m1(m)); return; }
       addClass(m[1], m[2]); return;
     }
-    if(cur && classes.length && classes[classes.length - 1].section === cur && /^[a-z(]/.test(line) && line.length < 60){ classes[classes.length - 1].title += ' ' + line; return; }
+    if(cur && classes.length && classes[classes.length - 1].section === cur && /^[a-z(]/.test(line) && line.length < 60 && !PROSE.test(line) && !/\b(staged|exhibits?|entries)\b/i.test(line)){ var lc2 = classes[classes.length - 1]; lc2.title += ' ' + line; joined.push(lc2.code + ': ' + line); return; }
     skipped.push(line);
   });
   var used = sections.filter(function(s){ return classes.some(function(c){ return c.section === s; }); });
-  return {sections: used, classes: classes, skipped: skipped, renamed: renamed, showMoney: showMoney};
+  return {sections: used, classes: classes, skipped: skipped, renamed: renamed, joined: joined, showMoney: showMoney};
 }
 /* "Prizes: 1st £2, 2nd £1.50, 3rd £1" / "Prize money 1st 60p 2nd 40p 3rd 20p" -> [200,150,100] */
 function m1(m){ return m[1] + ' ' + m[2]; }
@@ -549,8 +554,9 @@ function tidyName(s){
   if(bare === bare.toUpperCase() && /[A-Z]/.test(bare)) s = s.toLowerCase().replace(/(^|[\s\-–\/(&])([a-z])/g, function(_, a, b){ return a + b.toUpperCase(); });
   return s;
 }
-var JUNIOR_SEC = /\b(junior|juniors|children'?s?|child|youth|young (people|gardeners?)|school|under\s*\d{1,2}\b|u\d{1,2}s?\b|age[ds]?\s*\d)/i;
-var JUNIOR_TITLE = /^\(?(junior|child|children)\b|\b(aged?\s*\d{1,2}\s*(yrs|years|and under|&\s*under|-\s*\d{1,2}\s*(yrs|years)?\b)|under\s*\d{1,2}\s*(yrs|years)|\d{1,2}\s*(yrs|years)\s*(and|&)\s*under|by a child)\b/i;
+var JUNIOR_SEC = /\b(junior|juniors|children'?s?|child|youth|young (people|gardeners?)|schools?\s+(section|children|pupils)|primary school|under\s*\d{1,2}\b|u\d{1,2}s?\b|age[ds]?\s*\d{1,2}\s*(-|to|and under|&\s*under|years and under|yrs and under))/i;
+var JUNIOR_TITLE = /^\(?(junior|child|children)\b(?!.*\badult\b)|\b(aged?\s*\d{1,2}\s*(and under|&\s*under|-\s*\d{1,2}|to\s*\d{1,2})|under\s*\d{1,2}\s*(yrs|years)|\d{1,2}\s*(yrs|years)\s*(and|&)\s*under|by a child)\b/i;
+var ADULT = /\b(adults?|seniors?|over\s*\d{2}|\d{2}\s*(and|&)\s*over)\b/i;
 
 /* ---------- the show ---------- */
 function defaultPlaces(){
@@ -616,7 +622,7 @@ function compute(S){
   var warn = [], per = {}, entered = {}, classEntries = {};
   S.exhibitors.forEach(function(e){
     var list = (S.entries[e.id] || []).filter(function(cid){ return cls[cid]; });
-    var fee = 0; list.forEach(function(cid){ fee += entryFee(S, cls[cid], e); entered[e.id + '|' + cid] = 1; (classEntries[cid] = classEntries[cid] || []).push(e.id); });
+    var fee = 0; list.forEach(function(cid){ fee += entryFee(S, cls[cid], e); entered[e.id + '|' + cid] = (entered[e.id + '|' + cid] || 0) + 1; (classEntries[cid] = classEntries[cid] || []).push(e.id); });
     if(S.show.feeCap != null && fee > S.show.feeCap) fee = S.show.feeCap;
     per[e.id] = {ex: e, entries: list.length, fee: fee, paid: e.paid ? fee : 0, wins: [], prize: 0, pts: 0, places: new Array(P).fill(0)};
   });
@@ -637,8 +643,8 @@ function compute(S){
       nos.forEach(function(no){
         var e = exByNo[no];
         if(!e){ warn.push({cls: c.id, msg: 'Class ' + c.code + ': ' + S.show.places[i].label + ' is exhibitor ' + no + ', who is not on the list.'}); return; }
-        if(seenEx[e.id] && !S.show.multi) warn.push({cls: c.id, msg: 'Class ' + c.code + ': exhibitor ' + e.no + ' is placed twice.'});
-        seenEx[e.id] = 1;
+        seenEx[e.id] = (seenEx[e.id] || 0) + 1;
+        if(seenEx[e.id] > Math.max(1, entered[e.id + '|' + c.id] || 0)) warn.push({cls: c.id, msg: 'Class ' + c.code + ': exhibitor ' + e.no + ' is placed ' + seenEx[e.id] + ' times but has ' + (entered[e.id + '|' + c.id] || 0) + ' entr' + ((entered[e.id + '|' + c.id] || 0) === 1 ? 'y' : 'ies') + ' here.'});
         if(!entered[e.id + '|' + c.id]) warn.push({cls: c.id, msg: 'Class ' + c.code + ': exhibitor ' + e.no + ' (' + e.name + ') is placed ' + S.show.places[i].label + ' but has no entry in this class.'});
         if(c.junior && !e.junior) warn.push({cls: c.id, msg: 'Class ' + c.code + ' is a junior class; exhibitor ' + e.no + ' (' + e.name + ') is not marked junior.'});
         var a = {cls: c, place: i, ex: e, money: money, pts: pts, equal: k > 1};
@@ -747,7 +753,7 @@ function applySchedule(S, parsed){
   parsed.classes.forEach(function(pc){
     if(have[pc.code.toLowerCase()]){ dup++; return; }
     have[pc.code.toLowerCase()] = 1;
-    var jr = JUNIOR_SEC.test(pc.section.name) || JUNIOR_TITLE.test(pc.title);
+    var jr = (JUNIOR_SEC.test(pc.section.name) && !ADULT.test(pc.section.name) || JUNIOR_TITLE.test(pc.title)) && !ADULT.test(pc.title);
     if(jr) junior.push(pc.code);
     S.classes.push({id: nid(S, 'c'), code: pc.code, title: pc.title, sec: secMap.get(pc.section), money: pc.money || null, fee: null, junior: jr});
     added++;
@@ -875,7 +881,7 @@ function clean(o){
   var nos = {};
   S.exhibitors = arr(o.exhibitors).filter(function(e){ return e && IDRE.test(e.id) && num(e.no, 0) >= 1; }).map(function(e){
     return {id: e.id, no: Math.round(+e.no), name: String(e.name || '').slice(0, 120), junior: !!e.junior, member: e.member !== false, paid: !!e.paid, donate: !!e.donate, tags: String(e.tags || '').slice(0, 80),
-            printed: Array.isArray(e.printed) ? e.printed.filter(function(x){ return typeof x === 'string' && IDRE.test(x); }) : null};
+            printed: Array.isArray(e.printed) ? e.printed.filter(function(x){ return typeof x === 'string' && /^[a-z][a-z0-9]{0,6}:.{1,8}$/.test(x); }) : null, printedNo: num(e.printedNo, null)};
   }).filter(function(e){ if(nos[e.no]) return false; nos[e.no] = 1; return true; });
   var exOk = {}; S.exhibitors.forEach(function(e){ exOk[e.id] = 1; });
   var en = obj(o.entries); for(var k in en) if(exOk[k] && Array.isArray(en[k])){ var seenC = {}; S.entries[k] = en[k].filter(function(c){ if(!clsOk[c] || (!S.show.multi && seenC[c])) return false; seenC[c] = 1; return true; }); }
@@ -1032,6 +1038,7 @@ $('readSched').addEventListener('click', function(){
     (p.renamed.length ? '<br>These numbers repeat in a later section, so they got the section letter: ' + esc(p.renamed.map(function(x){ return x.from + ' → ' + x.to; }).join(', ')) + '. Change them in the list if your schedule uses other numbers.' : '') +
     (twice.length ? '<br><span class="err">Left out (number used twice): ' + esc(twice.join('; ')) + '</span>' : '') +
     (r.junior.length ? '<br>Marked junior: ' + esc(r.junior.join(', ')) + '.' : '') +
+    (p.joined.length ? '<br>Joined to the class above: ' + esc(p.joined.join('; ')) + '.' : '') +
     (p.skipped.length - twice.length > 0 ? '<details><summary>' + (p.skipped.length - twice.length) + ' lines were not classes (rules, prizes, headings)</summary><div style="font-size:14px">' + p.skipped.filter(function(l){ return !/used twice/.test(l); }).map(esc).join('<br>') + '</div></details>' : '');
   $('pasteBox').value = '';
   renderSchedule(); renderTop();
@@ -1117,8 +1124,14 @@ function similarNames(name){
 }
 /* Add classes to someone already on the list (same name came in twice: email, then post). */
 function mergeInto(e, text){
-  var before = C.entriesText(S, e.id), r = C.setEntries(S, e.id, before + ', ' + text);
-  return r;
+  var r = C.parseList(text, S.classes.map(function(c){ return c.code; }), !!S.show.multi), map = {};
+  S.classes.forEach(function(c){ map[c.code.toLowerCase()] = c.id; });
+  var have = {}, add = {}, list = (S.entries[e.id] || []).slice();
+  list.forEach(function(id){ have[id] = (have[id] || 0) + 1; });
+  r.codes.forEach(function(c){ var id = map[c.toLowerCase()]; add[id] = (add[id] || 0) + 1; });
+  for(var id in add) for(var n = have[id] || 0; n < add[id]; n++) list.push(id);   // a re-sent form doesn't double entries
+  S.entries[e.id] = list;
+  return {codes: list, bad: r.bad};
 }
 function juniorNote(codes, junior){
   var map = {}; S.classes.forEach(function(c){ map[c.code.toLowerCase()] = c; });
@@ -1137,7 +1150,7 @@ $('eAdd').addEventListener('click', function(){
   if(same && confirm(name + ' is already exhibitor ' + same.no + ' (' + C.entriesText(S, same.id) + '). Add these classes to number ' + same.no + '?\n\nOK = same person. Cancel = a different person with the same name.')){
     var m = mergeInto(same, text); msg = same.name + ' (' + same.no + ') now has ' + m.codes.length + ' entries.';
   } else {
-    var x = addExhibitor(name, text, $('eJun').checked); msg = name + ' is exhibitor ' + x.e.no + ' with ' + x.r.codes.length + ' entr' + (x.r.codes.length === 1 ? 'y' : 'ies') + '.';
+    var x = addExhibitor(name, text, $('eJun').checked); msg = name + ' is exhibitor ' + x.e.no + ' with ' + x.r.codes.length + ' entr' + (x.r.codes.length === 1 ? 'y' : 'ies') + '.' + (x.e.junior && !$('eJun').checked ? ' Marked junior: only junior classes.' : '');
   }
   touched(); trackOnce('exhibitor-added'); save();
   say(msg + juniorNote(r.codes, $('eJun').checked));
@@ -1151,20 +1164,23 @@ $('eName').addEventListener('keydown', function(e){ if(e.key === 'Enter') $('eCl
 $('bulkAdd').addEventListener('click', function(){
   if(S.example){ say('This is the example show. Click "Start my own show" first.'); return; }
   if(!S.classes.length){ say('Add the classes on step 1 first.'); return; }
-  var lines = $('bulkBox').value.split(/\r?\n/).filter(function(l){ return l.trim(); }), added = 0, merged = 0, keep = [], problems = [];
+  var lines = $('bulkBox').value.split(/\r?\n/).filter(function(l){ return l.trim(); }), added = 0, merged = 0, keep = [], problems = [], autoJ = [], similar = [];
   var known = S.classes.map(function(c){ return c.code; });
   lines.forEach(function(l){
     var m = /^(.+?)\s*(?::|\t)\s*(.*)$/.exec(l.trim());
     if(!m){ keep.push(l); problems.push('"' + l.trim() + '": no colon between name and classes'); return; }
-    var name = m[1].replace(/^"|"$/g, '').trim(), jr = /\s*\((junior|jr|j|child|age\s*\d{1,2}|\d{1,2})\)\s*$/i.test(name); name = name.replace(/\s*\((junior|jr|j|child|age\s*\d{1,2}|\d{1,2})\)\s*$/i, '');
+    var name = m[1].replace(/^"|"$/g, '').trim(), jm = /\s*\((junior|jr|j|child|(?:age\s*)?(\d{1,2}))\)\s*$/i.exec(name), jr = !!jm && (!jm[2] || +jm[2] <= 17);
+    if(jm && jr) name = name.slice(0, jm.index);
     var r = C.parseList(m[2], known, !!S.show.multi);
     if(!r.codes.length || r.bad.length){ keep.push(l); problems.push(name + ': ' + (r.bad.length ? 'not in schedule ' + r.bad.join(', ') : 'no classes')); return; }
     var same = C.findByName(S, name)[0];
-    if(same){ mergeInto(same, m[2]); merged++; } else { addExhibitor(name, m[2], jr); added++; }
+    if(same){ mergeInto(same, m[2]); merged++; } else { var xx = addExhibitor(name, m[2], jr); added++; if(xx.e.junior && !jr) autoJ.push(name); var sim = similarNames(name).filter(function(e){ return e.id !== xx.e.id; }); if(sim.length) similar.push(name + ' / ' + sim[0].name); }
   });
   if(added || merged){ touched(); trackOnce('exhibitor-added'); save(); }
   $('bulkBox').value = keep.join('\n');
-  $('bulkMsg').innerHTML = '<span class="ok">Added ' + added + (merged ? ', added classes to ' + merged + ' already on the list' : '') + '.</span>' + (problems.length ? ' <span class="err">Still in the box, fix and press again: ' + esc(problems.join('; ')) + '</span>' : '');
+  $('bulkMsg').innerHTML = '<span class="ok">Added ' + added + (merged ? ', added classes to ' + merged + ' already on the list' : '') + '.</span>' +
+    (autoJ.length ? ' Marked junior (only junior classes): ' + esc(autoJ.join(', ')) + '.' : '') +
+    (similar.length ? ' <b>Same person?</b> ' + esc(similar.join('; ')) + '.' : '') + (problems.length ? ' <span class="err">Still in the box, fix and press again: ' + esc(problems.join('; ')) + '</span>' : '');
   renderEntries(); renderTop();
 });
 function renderEntries(){
@@ -1234,10 +1250,11 @@ function cardList(){
   S.exhibitors.slice().sort(function(a, b){ return a.no - b.no; }).forEach(function(e){
     if(which === 'one' && e.no !== one) return;
     var list = (S.entries[e.id] || []).filter(function(cid){ return cls[cid]; }), left = (e.printed || []).slice(), count = {}, seen = {};
+    if(e.printedNo !== e.no) left = [];   // renumbered after printing: every card needs the new number
     list.forEach(function(cid){ count[cid] = (count[cid] || 0) + 1; });
     list.forEach(function(cid){
       seen[cid] = (seen[cid] || 0) + 1;
-      if(which === 'new'){ var k = left.indexOf(cid); if(k >= 0){ left.splice(k, 1); return; } }
+      if(which === 'new'){ var k = left.indexOf(cid + ':' + cls[cid].code); if(k >= 0){ left.splice(k, 1); return; } }
       out.push({c: cls[cid], e: e, of: count[cid] > 1 ? seen[cid] + ' of ' + count[cid] : ''});
     });
   });
@@ -1283,7 +1300,8 @@ $('pCards').addEventListener('click', function(){
       return cardHTML({show: S.show.name, code: x.c.code, title: x.c.title, no: x.e.no, name: x.e.name, showName: name, of: x.of});
     }).join('') + '</div>';
   }
-  if(!S.example){ var done = {}; l.forEach(function(x){ done[x.e.id] = 1; }); S.exhibitors.forEach(function(e){ if(done[e.id]) e.printed = (S.entries[e.id] || []).slice(); }); save(); }
+  if(!S.example){ var done = {}, cm = C.byId(S.classes); l.forEach(function(x){ done[x.e.id] = 1; });
+    S.exhibitors.forEach(function(e){ if(done[e.id]){ e.printed = (S.entries[e.id] || []).filter(function(id){ return cm[id]; }).map(function(id){ return id + ':' + cm[id].code; }); e.printedNo = e.no; } }); save(); }
   if(!S.example && l.length >= 10) track('real-cards');
   doPrint(html, paper, 'print-cards');
 });
@@ -1407,7 +1425,7 @@ function cupHTML(r, locked){
     win = '<div class="win">' + esc(cupWinText(r)) + '</div>';
     var unit = t.kind === 'money' ? money : t.kind === 'firsts' ? function(x){ return x + ' × ' + S.show.places[0].label; } : function(x){ return C.fmtPts(x) + ' pts'; };
     var why = r.table.length ? unit(r.table[0].score) : (t.kind === 'class' ? '1st in class ' + esc(clsCode(t.cls)) + (t.note ? ', ' + esc(t.note) : '') : '');
-    if(r.tie) why += r.tieBroken ? ' · tie broken on most ' + esc(S.show.places[0].label) + ' places' : (t.tie === 'share' ? ' · shared' : ' · <span class="err">still tied after counting places: the committee decides</span>');
+    if(r.tie) why += r.tieBroken ? ' · tie broken by counting places (' + esc(S.show.places[0].label) + ', then ' + esc(S.show.places[1].label) + (t.tie === 'two' ? '' : '…') + ')' : (t.tie === 'share' ? ' · shared' : ' · <span class="err">still tied after counting places: the committee decides</span>');
     win += '<div class="why">' + why + '</div>';
   } else win = '<div class="win">—</div><div class="why">' + esc(r.note || 'No winner yet.') + '</div>';
   if(r.bad && r.bad.length && r.winners.length) win += '<div class="why err">Not classes in this schedule: ' + esc(r.bad.join(', ')) + '</div>';
