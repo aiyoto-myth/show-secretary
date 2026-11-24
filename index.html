@@ -230,6 +230,7 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
       <option value="pool">They share the money and points of the places they fill (2nd + 3rd); no 3rd is given</option>
       <option value="full">Each gets the full 2nd prize and points; no 3rd is given</option>
       <option value="split">They share the 2nd prize and points; a 3rd is still given</option></select></label>
+    <label class="f" style="flex-direction:row;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="sMulti">An exhibitor may enter a class more than once (different varieties, as at garden-club shows)</label>
   </div>
 
   <div class="panel" id="pastePanel">
@@ -244,6 +245,7 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
     <div class="scroll"><table class="tbl stack" id="classTbl"><thead><tr><th>Class</th><th>Title</th><th>Section</th><th>Prize money <small>(1st, 2nd, 3rd)</small></th><th>Fee</th><th>Junior</th><th></th></tr></thead><tbody id="classBody"></tbody></table></div>
     <p id="noClasses" hidden>No classes yet. Paste them above, or add them one at a time.</p>
     <div id="secMoney"></div>
+    <button class="btn small ghost" id="addSec" style="margin-top:8px">+ Add a section</button>
   </div>
 </section>
 
@@ -259,7 +261,7 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
     </div>
     <div id="eHint" style="margin-top:8px;font-size:15px;min-height:22px"></div>
     <details style="margin-top:8px"><summary>Paste many at once</summary>
-      <p style="font-size:15px">One exhibitor per line: name, a colon, then the classes. <b>Ann Pike: 1, 3, 12-14</b>. Two columns copied from Excel (name, classes) work too. A name already on the list gets the classes added.</p>
+      <p style="font-size:15px">One exhibitor per line: name, a colon, then the classes. <b>Ann Pike: 1, 3, 12-14</b>. A child: <b>Sam Pike (junior): J1-J3</b>. Two columns copied from Excel (name, classes) work too. A name already on the list gets the classes added.</p>
       <textarea id="bulkBox" style="min-height:110px"></textarea>
       <button class="btn small" id="bulkAdd">Add all</button> <span id="bulkMsg"></span>
     </details>
@@ -277,6 +279,8 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
     <h2>Exhibit cards</h2>
     <p>One card per entry, eight to a page. Fold along the dashed line so the name faces down and the judges see only the numbers.</p>
     <div class="row">
+      <label class="f">Which cards<select id="cWhich"><option value="all">All entries</option><option value="new">Only entries not printed yet</option><option value="one">One exhibitor</option></select></label>
+      <label class="f" id="cOneL" hidden>Exhibitor no.<input type="number" class="num" id="cOne" min="1"></label>
       <label class="f">Order<select id="cOrder"><option value="ex">By exhibitor (to hand out)</option><option value="cls">By class (to lay out on the benches)</option></select></label>
       <label class="f" style="flex-direction:row;gap:6px;align-items:center;min-height:42px"><input type="checkbox" id="cName" checked>Name under the fold</label>
       <button class="btn" id="pCards">Print exhibit cards</button>
@@ -314,6 +318,7 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
       <div><div class="big" id="payDon">£0</div><div>given back by donors</div></div>
       <div><div class="big" id="payMax">£0</div><div>most it could be (every place awarded)</div></div>
     </div>
+    <p id="payNote" style="font-size:15px;margin:8px 0 0"></p>
     <h3>Coins and notes to fill the envelopes exactly</h3>
     <label class="f" style="flex-direction:row;align-items:center;gap:8px">Biggest note to use<select id="maxNote"></select></label>
     <div class="coins" id="coinList"></div>
@@ -392,7 +397,7 @@ function fmt(minor, code){
 function fmtPts(p60){ return String(Math.round(p60 / PT * 100) / 100); }
 /* "1.50", "£1.50", "150p", "50p", "2", "1,50" (decimal comma), "1,000" -> minor units; '' -> null; anything else -> NaN */
 function parseMoney(s){
-  s = String(s == null ? '' : s).trim().replace(/^(nz|au|us|ca)?[£$€]\s*/i, '');
+  s = String(s == null ? '' : s).trim().replace(/^(nz|au|us|ca)?[£$€]\s*/i, '').replace(/\s*[€]$/, '');
   if(s === '') return null;
   var m = /^(\d+)\s*(p|c|¢)$/i.exec(s);
   if(m) return parseInt(m[1], 10);
@@ -404,7 +409,7 @@ function parseMoney(s){
 /* "3, 2, 1" / "3/2/1" / "£5 £3 £2" -> [300,200,100]. On a euro show "1,50; 1; 0,50" uses ; / or spaces. '' -> null, junk -> NaN */
 function parseMoneyList(t, code){
   t = String(t == null ? '' : t).trim(); if(!t) return null;
-  var parts = code === 'EUR' ? t.split(/\s*[;\/]\s*|\s+/) : t.split(/\s*[;,\/]\s*|\s+/);
+  var parts = code === 'EUR' ? t.split(/\s*[;\/]\s*|,\s+|\s+/) : t.split(/\s*[;,\/]\s*|\s+/);
   var out = [], ok = true;
   parts.filter(Boolean).forEach(function(x){ var m = parseMoney(x); if(m == null || isNaN(m)) ok = false; else out.push(m); });
   return ok && out.length ? out : NaN;
@@ -433,21 +438,22 @@ function sortCodes(a, b){
 /* A list like "1, 3, 5-7 12a", "J1-J8", "J1-8", "1 - 3", "1 to 3" -> codes, unique, in typed order.
    With `known` (the schedule's codes) a range takes every known code with that prefix whose number is in range
    (11-13 includes 12a), any known code matches exactly (even "C"), and a token or range that matches nothing is in `bad`. */
-function parseList(text, known){
+function parseList(text, known, multi){
   var out = [], bad = [], seen = {}, knownMap = null;
   if(known){ knownMap = {}; known.forEach(function(k){ knownMap[String(k).toLowerCase()] = String(k); }); }
-  function add(c){ var k = c.toLowerCase(); if(!seen[k]){ seen[k] = 1; out.push(c); } }
+  function add(c, single){ var k = c.toLowerCase(); if(!seen[k] || (multi && single)){ seen[k] = 1; out.push(c); } }
   var s = String(text || '').replace(/([A-Za-z]{0,3}\d{1,4}[A-Za-z]?)\s*(?:[-–—]|\bto\b)\s*([A-Za-z]{0,3}\d{1,4}[A-Za-z]?)\b/gi, '$1-$2');
   s.split(/[\s,;\/&+]+|\band\b/i).forEach(function(tok){
     tok = tok.replace(/^(classes|class|no\.|#)/i, '').replace(/^[.(]+|[.):]+$/g, '').trim();
     if(!tok) return;
-    if(knownMap && knownMap[tok.toLowerCase()]){ add(knownMap[tok.toLowerCase()]); return; }
-    var r = /^([A-Za-z]{0,3})(\d{1,4})[A-Za-z]?-([A-Za-z]{0,3})(\d{1,4})[A-Za-z]?$/.exec(tok);
+    if(knownMap && knownMap[tok.toLowerCase()]){ add(knownMap[tok.toLowerCase()], true); return; }
+    var r = /^([A-Za-z]{0,3})(\d{1,4})([A-Za-z]?)-([A-Za-z]{0,3})(\d{1,4})([A-Za-z]?)$/.exec(tok);
     if(r){
-      var pre = r[1].toLowerCase(), pre2 = r[3].toLowerCase(), a = +r[2], b = +r[4];
+      var pre = r[1].toLowerCase(), pre2 = r[4].toLowerCase(), a = +r[2], b = +r[5], sa = r[3].toLowerCase(), sb = r[6].toLowerCase();
       if((pre2 && pre2 !== pre) || b < a || b - a > 500){ bad.push(tok); return; }
       if(knownMap){
-        var hit = known.filter(function(k){ var x = splitCode(k); return x && x.pre === pre && x.n >= a && x.n <= b; }).sort(sortCodes);
+        var hit = known.filter(function(k){ var x = splitCode(k); if(!x || x.pre !== pre || x.n < a || x.n > b) return false;
+          if(x.n === a && sa && x.suf < sa) return false; if(x.n === b && sb && (!x.suf || x.suf > sb)) return false; if(x.n === b && !sb && x.suf && a === b) return false; return true; }).sort(sortCodes);
         if(!hit.length){ bad.push(tok); return; }
         hit.forEach(function(k){ add(String(k)); });
       } else for(var i = a; i <= b; i++) add(r[1] + i);
@@ -471,10 +477,13 @@ function parseList(text, known){
    letter + number ("B1"), listed in `renamed`. */
 var RULE_HEAD = /^(general\s+)?(rules|regulations|conditions(\s+of\s+entry)?|notes?\s+(to|for)\s+exhibitors|timetable|programme|show\s+rules|important\s+information|information\s+for\s+exhibitors)\b/i;
 var PROSE = /\b(must|shall|should|will be|may not|is final|please|entries close|closing date|no exhibitor|exhibitors? (may|are|will|must|can)|at the discretion|are not|is not|will not)\b/i;
+var RULE_SUBJECT = /^(all|any|exhibits?|exhibitors?|entries|entry|the judges?|judges?|judging|no\b|prizes?|prize money|each exhibitor|stewards?|cars?|dogs?|the (committee|society|show)|committee|members?|staging|exhibitors'?)\b/i;
+var NOT_SECTION = /^(steward|stewards|secretary|convenor|convener|judge|judges|superintendent|chair|chairman|chairperson|contact|entries)\b/i;
 var SEC_KEY = /^(section|division|dept\.?|department|category|part)(?:\s+(.*)|\s*([-–—:.)].*))$/i;
 function sectionLine(line){
-  var k = SEC_KEY.exec(line); if(!k || PROSE.test(line)) return null;
-  var rest = (k[2] || k[3] || '').trim(), m = /^([A-Z]{1,2}|\d{1,2}|[IVX]{1,4})(?=\s|[-–—:.)]|$)\s*[-–—:.)]?\s*(.*)$/.exec(rest);
+  var k = SEC_KEY.exec(line); if(!k) return null;
+  var rest = (k[2] || k[3] || '').trim(); if(NOT_SECTION.test(rest.replace(/^[A-Z]{1,2}\s+(?=[A-Z])/, '')) || (PROSE.test(line) && line.length > 60)) return null;
+  var m = /^([A-Z]{1,2}|\d{1,2}|[IVX]{1,4})(?=\s|[-–—:.)]|$)\s*[-–—:.)]?\s*(.*)$/.exec(rest);
   if(m) return {code: m[1].toUpperCase(), name: m[2].replace(/[:.\s]+$/, '').trim() || ('Section ' + m[1])};
   if(/^[-–—:.)]/.test(rest)) return {code: '', name: rest.replace(/^[-–—:.)\s]+/, '').replace(/[:.\s]+$/, '').trim()};
   if(/^[A-Z]/.test(rest) && rest.length <= 60) return {code: '', name: rest};
@@ -515,16 +524,22 @@ function parseSchedule(text){
     if(only){ pendingCode = only[1]; return; }
     if(/^(19|20)\d\d\b/.test(line) || /^\d{1,2}[.:]\d{2}\b/.test(line) || /^[A-Z]{1,2}\d[A-Z\d]?\s+\d[A-Z]{2}\b/.test(line)){ skipped.push(line); return; }
     m = /^(?:class\s*)?([A-Za-z]{0,3}\d{1,4}[A-Za-z]?)\s*(?:[.):\-–—]\s*|\s+)(.{2,})$/i.exec(line);
-    if(m && !/^\d{1,4}(st|nd|rd|th)\b/i.test(line) && /[A-Za-z]{2}/.test(m[2]) && !PROSE.test(m[2]) && m[2].length <= 120){ addClass(m[1], m[2]); return; }
+    var ruleLike = m && (RULE_SUBJECT.test(m[2]) || (!cur && PROSE.test(m[2])));
+    if(m && !/^\d{1,4}(st|nd|rd|th)\b/i.test(line) && /[A-Za-z]{2}/.test(m[2]) && !ruleLike && m[2].length <= 120){
+      if(/^\d{1,2}\s+[a-z]/.test(line) && m[2].length < 30 && classes.length && classes[classes.length - 1].section === cur){ var lc = classes[classes.length - 1]; lc.title += ', ' + m1(m) ; return; }
+      addClass(m[1], m[2]); return;
+    }
+    if(cur && classes.length && classes[classes.length - 1].section === cur && /^[a-z(]/.test(line) && line.length < 60){ classes[classes.length - 1].title += ' ' + line; return; }
     skipped.push(line);
   });
   var used = sections.filter(function(s){ return classes.some(function(c){ return c.section === s; }); });
   return {sections: used, classes: classes, skipped: skipped, renamed: renamed, showMoney: showMoney};
 }
 /* "Prizes: 1st £2, 2nd £1.50, 3rd £1" / "Prize money 1st 60p 2nd 40p 3rd 20p" -> [200,150,100] */
+function m1(m){ return m[1] + ' ' + m[2]; }
 function prizeLine(line){
   if(!/^(prizes?|prize money|money)\b/i.test(line) && !/^1st\b/i.test(line)) return null;
-  var re = /(1st|2nd|3rd|4th|first|second|third)\s*(?:prize\s*)?[-–:=]?\s*([£$€]?\s*\d+(?:\.\d{1,2})?\s*p?)/gi, m, out = [];
+  var re = /(1st|2nd|3rd|4th|first|second|third)\s*(?:prize\s*)?[-–:=]?\s*([£$€]?\s*\d+(?:[.,]\d{1,2})?\s*(?:p|c|¢|€)?)/gi, m, out = [];
   while((m = re.exec(line))){ var v = parseMoney(m[2].replace(/\s+/g, '')); if(v != null && !isNaN(v)) out.push(v); }
   return out.length ? out : null;
 }
@@ -535,7 +550,7 @@ function tidyName(s){
   return s;
 }
 var JUNIOR_SEC = /\b(junior|juniors|children'?s?|child|youth|young (people|gardeners?)|school|under\s*\d{1,2}\b|u\d{1,2}s?\b|age[ds]?\s*\d)/i;
-var JUNIOR_TITLE = /^\(?(junior|child|children)\b|\b(aged?\s*\d{1,2}|under\s*\d{1,2}\s*(yrs|years)|\d{1,2}\s*(yrs|years)\s*(and|&)\s*under|for children)\b/i;
+var JUNIOR_TITLE = /^\(?(junior|child|children)\b|\b(aged?\s*\d{1,2}\s*(yrs|years|and under|&\s*under|-\s*\d{1,2}\s*(yrs|years)?\b)|under\s*\d{1,2}\s*(yrs|years)|\d{1,2}\s*(yrs|years)\s*(and|&)\s*under|by a child)\b/i;
 
 /* ---------- the show ---------- */
 function defaultPlaces(){
@@ -605,24 +620,24 @@ function compute(S){
     if(S.show.feeCap != null && fee > S.show.feeCap) fee = S.show.feeCap;
     per[e.id] = {ex: e, entries: list.length, fee: fee, paid: e.paid ? fee : 0, wins: [], prize: 0, pts: 0, places: new Array(P).fill(0)};
   });
-  var awards = [];
+  var awards = [], rounded = 0;
   S.classes.forEach(function(c){
     var r = S.results[c.id]; if(!r || r.none || !Array.isArray(r.p)) return;
     var seenEx = {}, covered = {}, filled = function(i){ return placeNos(r.p[i]).length > 0; };
     for(var i = 0; i < P; i++){
       if(!on[i]) continue;
       var nos = placeNos(r.p[i]), k = nos.length; if(!k) continue;
-      if(covered[i]) warn.push({cls: c.id, msg: 'Class ' + c.code + ': ' + S.show.places[i].label + ' is filled, but the equal place above already takes it.'});
+      if(covered[i]){ warn.push({cls: c.id, msg: 'Class ' + c.code + ': ' + S.show.places[i].label + ' is filled, but the equal place above takes it, so it is not paid. Clear it, or change the equal-places rule on step 1.'}); continue; }
       var money, pts;
-      if(rule === 'split'){ money = shareUp(placeMoney(S, c, i), k, st); pts = placePts(S, i) * PT / k; }
+      if(rule === 'split'){ money = shareUp(placeMoney(S, c, i), k, st); pts = placePts(S, i) * PT / k; rounded += money * k - placeMoney(S, c, i); }
       else if(rule === 'full'){ money = placeMoney(S, c, i); pts = placePts(S, i) * PT; }
-      else { var mo = 0, po = 0, got = 0; for(var j = i; j < P && got < k; j++){ if(!on[j]) continue; mo += placeMoney(S, c, j); po += placePts(S, j) * PT; got++; } money = shareUp(mo, k, st); pts = po / k; }
+      else { var mo = 0, po = 0, got = 0; for(var j = i; j < P && got < k; j++){ if(!on[j]) continue; mo += placeMoney(S, c, j); po += placePts(S, j) * PT; got++; } money = shareUp(mo, k, st); pts = po / k; rounded += money * k - mo; }
       if(k > 1 && rule !== 'split'){ var cnt = 0; for(var j2 = i + 1; j2 < P && cnt < k - 1; j2++){ if(on[j2]){ covered[j2] = 1; cnt++; } } }
       pts = Math.round(pts);
       nos.forEach(function(no){
         var e = exByNo[no];
         if(!e){ warn.push({cls: c.id, msg: 'Class ' + c.code + ': ' + S.show.places[i].label + ' is exhibitor ' + no + ', who is not on the list.'}); return; }
-        if(seenEx[e.id]) warn.push({cls: c.id, msg: 'Class ' + c.code + ': exhibitor ' + e.no + ' is placed twice.'});
+        if(seenEx[e.id] && !S.show.multi) warn.push({cls: c.id, msg: 'Class ' + c.code + ': exhibitor ' + e.no + ' is placed twice.'});
         seenEx[e.id] = 1;
         if(!entered[e.id + '|' + c.id]) warn.push({cls: c.id, msg: 'Class ' + c.code + ': exhibitor ' + e.no + ' (' + e.name + ') is placed ' + S.show.places[i].label + ' but has no entry in this class.'});
         if(c.junior && !e.junior) warn.push({cls: c.id, msg: 'Class ' + c.code + ' is a junior class; exhibitor ' + e.no + ' (' + e.name + ') is not marked junior.'});
@@ -644,7 +659,7 @@ function compute(S){
   var envelopes = [], donated = 0;
   S.exhibitors.forEach(function(e){ var q = per[e.id]; if(q.prize > 0){ if(e.donate) donated += q.prize; else envelopes.push(q); } });
   var tro = S.trophies.map(function(t){ return trophyResult(S, t, awards); });
-  return {per: per, awards: awards, warn: warn, totalPrize: totalPrize, totalFees: totalFees, totalPaid: totalPaid, maxPrize: maxPrize,
+  return {per: per, awards: awards, warn: warn, rounded: rounded, totalPrize: totalPrize, totalFees: totalFees, totalPaid: totalPaid, maxPrize: maxPrize,
           envelopes: envelopes, donated: donated, payout: totalPrize - donated, trophies: tro, classEntries: classEntries, entries: entryCount(S)};
 }
 
@@ -672,10 +687,11 @@ function trophyResult(S, t, awards){
   awards.forEach(function(a){
     if(!scope.has(a.cls) || !eligible(t, a.ex, ctx)) return;
     var r = tally[a.ex.id] = tally[a.ex.id] || {ex: a.ex, score: 0, places: new Array(S.show.places.length).fill(0)};
-    r.score += t.kind === 'money' ? a.money : a.pts; r.places[a.place]++;
+    r.score += t.kind === 'money' ? a.money : t.kind === 'firsts' ? (a.place === 0 ? 1 : 0) : a.pts; r.places[a.place]++;
   });
   var rows = []; for(var k in tally) if(tally[k].score > 0) rows.push(tally[k]);
-  function cmpPlaces(a, b){ for(var i = 0; i < a.places.length; i++){ if(a.places[i] !== b.places[i]) return b.places[i] - a.places[i]; } return 0; }
+  var depth = t.tie === 'two' ? 2 : 99;   // 'two': only 1sts then 2nds count (NGC sweepstakes: "red ribbons counted only in event of a tie")
+  function cmpPlaces(a, b){ for(var i = 0; i < a.places.length && i < depth; i++){ if(a.places[i] !== b.places[i]) return b.places[i] - a.places[i]; } return 0; }
   rows.sort(function(a, b){ return (b.score - a.score) || cmpPlaces(a, b) || (a.ex.no - b.ex.no); });
   res.table = rows;
   if(!rows.length){ res.note = scope.bad.length ? 'Not classes in this schedule: ' + scope.bad.join(', ') : 'No eligible places yet.'; return res; }
@@ -740,7 +756,7 @@ function applySchedule(S, parsed){
 }
 
 function setEntries(S, exId, text){
-  var r = parseList(text, S.classes.map(function(c){ return c.code; }));
+  var r = parseList(text, S.classes.map(function(c){ return c.code; }), !!S.show.multi);
   var map = {}; S.classes.forEach(function(c){ map[String(c.code).toLowerCase()] = c.id; });
   S.entries[exId] = r.codes.map(function(c){ return map[c.toLowerCase()]; });
   return r;
@@ -752,7 +768,7 @@ function entriesText(S, exId){
 function findByName(S, name){ var n = normName(name); return n ? S.exhibitors.filter(function(e){ return normName(e.name) === n; }) : []; }
 
 /* "Next year": keep classes, money and cups; clear people. Each cup remembers this year's winners by name. */
-function nextYear(S){
+function nextYear(S, keepNames){
   var o = compute(S), y = showYear(S);
   o.trophies.forEach(function(r){
     if(!r.winners.length || r.undecided) return;
@@ -761,9 +777,10 @@ function nextYear(S){
     h.sort(function(a, b){ return a.year - b.year; }); if(h.length > 10) h.splice(0, h.length - 10);
     r.t.history = h;
   });
-  S.exhibitors = []; S.entries = {}; S.results = {}; S.retired = []; S.example = false;
-  S.trophies.forEach(function(t){ if(t.kind === 'pick') t.kind = 'class'; if(t.judgePick) t.cls = ''; });
-  if(/^\d{4}-/.test(S.show.date || '')) S.show.date = (y + 1) + S.show.date.slice(4);
+  S.exhibitors = keepNames ? S.exhibitors.map(function(e){ return {id: e.id, no: e.no, name: e.name, junior: e.junior, member: e.member, tags: e.tags, paid: false, donate: false}; }) : [];
+  S.entries = {}; S.results = {}; S.retired = []; S.example = false;
+  S.trophies.forEach(function(t){ if(t.kind === 'pick') t.kind = 'class'; if(t.judgePick){ t.cls = ''; t.note = ''; } });
+  if(/^\d{4}-/.test(S.show.date || '')){ var nd = (y + 1) + S.show.date.slice(4); if(nd.slice(5) === '02-29' && (y + 1) % 4) nd = (y + 1) + '-02-28'; S.show.date = nd; }
 }
 
 return {PT: PT, CUR: CUR, cur: cur, step: step, fmt: fmt, fmtPts: fmtPts, parseMoney: parseMoney, parseMoneyList: parseMoneyList, coins: coins, floatFor: floatFor,
@@ -785,7 +802,7 @@ var VERIFY_URL = 'https://app-bizz-api.whop.site/api/verify';
 var CHECKOUT_HOME = 'https://whop.com/checkout/ch_1J9MIpBHNtFyxtm/';
 var CHECKOUT_PLAN = 'https://whop.com/checkout/plan_AP2gUS0RuTt6c';
 var PRICE = '$29';
-var GIFT = [];
+var GIFT = ['53c956681284dddcc567c89fce0adcb6f686583f40559bcd0678073bf92df91e','80545455d9bdda68bf91ed5dffc85377ea7662522f61fbb577fa381bb3598c77','33a08dc853bf001c684b50990061f2096da81e266c5ad0834dafa572ee671620','0cf2bf938639af70ae636449c13de552747a0d5699065e3c020c76bc86bd0c55','51a371cdbee61a80140ee768b308c1a50bfc0f18b65d58c84125a5209f8c9fe9','87caa46a4728144a40686fd3b04ba57d9832546a9e7407ff6cf5f077362ddd51','de38ccdc72fe322f1be774a845552532bd0393b4a9675b4fdea00a010ff6ccbc','3a76a57c45b9330aa6fed4199bb38a45950a198d8fe5d49a95982146bbeded18','dc25d57d7a7147ceff6e1c63537e85c79e8dcc01d62c579ecd3259e8b567d651','cc0a3ce4d977750895ca72d4bd0ea5fcab3726249edb57016c62d287604bdee1','483b9971e18137a61711c0f74f9ba49a48d396ce0a60bd72046c8fa61b387005','8f08936f621a8199e8b13282677f9559503c1f0404d76bc51862619562f5e07a','b1ac58a9fd52e9a8de754a6702e665348442312284f062f28bed85ae7be3abe7','33a0f53644a61ab24e0e807e135684cddfafc49370c0297eda6e2797580a3e4a','0a1a19f9d51ac1e17986ee45147d194224b21e4bc1dc495b7c35fa35cf55be91','13d1600b3d1bf9ef999b907c936114f905e0b5a50975936ca019734767b8478d','e873bfd2949893f223d43cd466ab052412ed08b0e4480355e82e66b7b4ad5d21','82c071fc980ceaa018a86b8bcd771b786864c55a9ac7b7d6171bd8991f8d8839','2a1f4797451b9779e00078ad5c7fdd7777e96e86968d278eafc3ca34de41255f','2018d1d2118ac848c14982c1d521dc7b439638834d055efedaec55eaace5fb74','3ce5f2225f46c7781283eddc78471147c7c7b59f8cea916a2cd15313f33e7d24','2f268ebb4076044aee1bee18847a76a2f977946571c48bc3cd05bb75ecb5e12e','1cabd0b1ebbe4d1f872631291ce10c98cffbffabbc57c5ac6a7540f7b6c281e7','7e902b71c095e47a815a4eae895353c8fed3e8c0978b8370a56be361c940210b','cfae5c7d0c3827dfc1ce9da2ed3bc746eebd99936ab9244cd2f41033888325ed','3c7993b38376e910f6767c29075bfe4c0d9e93e333630435481076cf6adf0798','879b954ac80c951468801bff6f22d9ebf5f37c3e224d830540472c3d6c739a5f','87c324862c92a3bc53550f598170a812f3cd26c10c2fd30a4c3962e6a5bda3d5','043ed18e32e27217282e62ae5649601cd285c589be4e67a4f9bc5348fe3c8a5a','de24aec33fa4ae8bd200c9785da731359771bec449ddae39784961328ee41e5a','bb2bd47621abdcb89b07559d1e36acde1d8090d1d40a42aa7e15170e3f911caf','4b7df75d1131466e57daa3903f50d075fa688557ca2775ff1d82cfbfb631b424','fbbcf110bfc6bc416988fa0b47043b1a239e7381e7bb37e2bcea3ff4babf01a4','285aea6c89cba6b29e90ed9e801601da7572c215c173d38ba92235c52f4be1b1','256231f005d06fe8874dab620f69acd5f4c7a3a0da7429af5e7809cf73593f55','c4cd8c57417e45f163f43e0cf86ef682cc2ddf7ff74c9174b8afe3dab71a5254','9d42851ca4341b0c3c091c46800571bb188b29ad58336e2ca43a3d44b974e183','7f73586077446df75240251a3e8319ebd573ce7c68ff653c28697b757d9e097f','337e193ede99277f50f53b9e77c86c8459c1f0f14dc072745a97fc585f2b25b8','29872780c1a57907afb0248908079f1bc4a30def21ff37e147e4c20b727b7328','187f66392493303454f53b38a7e08ba263f630f467d7cece4336ca51efdcc73b','7819ab3c5908e7e49a67f00aa7ba8d763413ac7c5693400eb917c93b5bc8c55c','299edac8125e69f2e8717c6c2d4ac3bf024106bff602ec353f4fc4738cf092aa','180bb34be696ebfd666a2267b0a13765bfea7c2d79dd630d15a2f5360ba07c0f','3b5a468ab1a5c28822f3a5a6c03e003fa9b6c0b0d580b28a709a0636db1f1651','be0426a737ab2a4b981964e4f6565268b969d4c4d3c273829242fa803eea3556','24701c1997b0c49bde983fad441eead35ce2ffb2efb416ce2fa1fa10f735982e','d63e46095667a79d38ccc696e4edb40bd32529d824edab4b1ceb77043ce598a6','e367f724a8a09c049758729bd7839d13190389d0b29e6d7899cabd646e38326d','37b7db16a1244d8d4ebb1ec2f92b2b359d03385828802ddb8c81bbb765f4b436','4f65dd7f4d8c2099d9ac8d6c95a7155f382caf47af2de518157f5958c8ff4c10','9e8649e576438088f186ef9333321ebf383d48b10294930881498261cf7f5357','540b276ca5d0da7dae0ef3ddb15d4cb689d65b04d1bc599d0bdae5867df9fa69','4da6540351093f818621248cac5d38531288fa7f50034001743123df94296147','944e9e557795835148c1c6c7a9f5924bf96c53bd51665fa7a6a421fd41a33661','9e3a71ae448558af6f1345c23e0f74785e3e6e0e9e7155776b96ed705ae98a72','336bd2138a56941cad38d4bee5840a95636435b17a16a183062bc0c3cf86f2a3','6f21cd834c4c08659abdd2bbf3aee24bef5ae94dcde69c0c067fede5d45213ce','012bd6df03fb72d3b518f9928458aae50a3ea53620387eafe249b865ddbfaca3','49cc90aba1d92d0cb12d20deb91a0bf8a71c1e85e237b79ecba69f22fec2781b','bccec6a844b901f70c4c19b1ac3a7f0c51bae77e11e6edd8b0f9741c41b593cd','b00c36b8f63a0b0c292d1c1ab208c1824a1c17c74b44c48921bae6f7ab762710','0be602e9dc8505a7e62cabbf3efed4b2966f3bf2332ab095705c9366e64a6a77','c0523232e1f19069dfb19ee0d31f5f511fc22c507dffee82c316c50d4af3d8bc','ec4d658e5908688fa2ccf7938115e6b788aea9e2ceb734eba2119378dc4387a6','7f79bde078e56610215c6225290b6ae3f188439aa0b187289474417c5d3eb18c','b09757f8c4043f6cfae6db91d8bf38f1af9c1d059b8d8329a7714fe81deec541','e14c7c52cbd96ad513ad8d0d5a6efc2c71c84f828cd40fecdc2ef1d093d09f1e','d4b927d18a1e0e5709436fe55bb41030c1ba86a4f5cf68d3ecb2b130907ffd5b','67e465599facc945a56416d2e833c559ea7219c63e916f2d9c08b79c6cfc608f','62e86a708d293f7a0ea67e137c5d927bf01382a71693c8fe0e8890f23dc59b2e','ba2f780541a1d4c835d9552fc2c3978df14eddae17225bb5881d173fbdffb764','92842eb613df18f674c83e65acf4db622e49268014f4a61261c81738a434724b','758c7ac8191c21cea652b5d4f100d31a2b3341a773b969fbacbf6d4f1c92a501','d7a8412270548b8dd5005bcee78256b4b4c00f41c04e3fbe2be84a3975d97f0b','d66334d5d20690a157a976cb2cfe962f445536d3df46f5cfc46d5751860a3ef7','c484321abdee9900a6dec03f0a498628f0b3f1b3810b86f73d084584bc080138','5b76d0a5f947065c134cdd80719f6c025ecfbb7c7f6342d489439c2c0ab11178','99b476ad8e7dc19f9d047245d6ee00e69f26cd2cf3c07a2c3a69d02e45d8a36f','7dd16c5244b00aaa248f3686b67f79c064b0b0feb0277e36760110316755f2f9','f135c840f2ffbcd03f1b417ed091664ee3419ecf201ed2edee81cf484d523fda','305bd7d059d4b89b056151fc97cb71f60f31294406769c81dd12e06ad389457a','3528ce2d02722d99a3f8a47d75c779a80a9eadedf7d37d2845a24ab1d3e3ad32','75d5590bc30bef18b7c9bb9e1f99e2f37fd1810095da170ddcc2c4b26a6b7459','ea18ad34a519b1c33ae6fd8e0de0082d9d4f449547b543844baaf6cdd1c4d25e','f819d6a7fa2259f2156183f628da97f759b26d449ddacac49898a8b94c6af789','50a1825d850435284186ff628df138b63a46028a7a41d8dee39cda107b045b80','6bc0f230382e503ff276285388fbcf86c597af7161216c0f00792be5adadd9db','bdc9760b26751190d9908e3f5751c4c701225412fe9322b08a2d4ff1c1856e62','060a416ddf998b84ffa7afdfc3d3c737f9472a000b4753bbae10d792bc5d2913','9c0bf5a48ce01b9cd2cb8845e6e5e04eb453169b57e00c0b3b590dbcbf3049d4','1437aa5eda4c26192f6f87cc76aad0c3a99b4d9eeb95ebaf075627a53c969a13'];
 var KEY = 'sss.v1', PROKEY = 'sss.pro', FREE_ENTRIES = 60;
 
 /* ---------- measurement (GoatCounter). ?via follows the visitor down the funnel; hits leave 700 ms apart (limit 4/s per IP+UA),
@@ -820,13 +837,17 @@ function drain(){
   setTimeout(function(){ SENDING = false; drain(); }, 700);
 }
 function trackOnce(name){ if(ONCE[name]) return; ONCE[name] = 1; track(name); }
+/* once per browser session (reloads don't count again) */
+function trackSession(name){ try{ var k = 'sss.ev.' + name; if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k, '1'); }catch(e){} trackOnce(name); }
+/* once per browser, ever (e.g. a show reaching ten entries) */
+function trackEver(name){ try{ var k = 'sss.ever.' + name; if(localStorage.getItem(k)) return; localStorage.setItem(k, '1'); }catch(e){} trackOnce(name); }
 
 /* ---------- state ---------- */
 function lsGet(k, d){ try{ var t = localStorage.getItem(k); return t ? JSON.parse(t) : d; }catch(e){ return d; } }
 function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
 /* Deep clean of anything loaded (localStorage or a show file): wrong types are coerced or dropped, ids must be short
    lowercase letters/digits (they go into HTML attributes), so a crafted file can't break the page or inject script. */
-var IDRE = /^[a-z0-9]{1,16}$/;
+var IDRE = /^[a-z][a-z0-9]{0,6}$/;   // nid() makes a letter + base 36 of a counter kept under 1e9
 function num(x, d){ x = +x; return isFinite(x) ? x : d; }
 function moneyArr(a){ if(!Array.isArray(a)) return null; var o = a.map(function(x){ return x == null || x === '' ? null : Math.max(0, Math.round(num(x, 0))); }); return o.length ? o.slice(0, 6) : null; }
 function clean(o){
@@ -840,6 +861,7 @@ function clean(o){
   ['nonMemberFee', 'feeCap', 'maxNote'].forEach(function(k){ S.show[k] = sh[k] == null || sh[k] === '' || !isFinite(+sh[k]) ? null : Math.max(0, Math.round(+sh[k])); });
   S.show.paper = sh.paper === 'Letter' ? 'Letter' : 'A4';
   S.show.equal = ['pool', 'full', 'split'].indexOf(sh.equal) >= 0 ? sh.equal : (o.v >= 2 ? 'pool' : 'split');
+  S.show.multi = !!sh.multi;
   var pl = Array.isArray(sh.places) ? sh.places : [];
   S.show.places = d.places.map(function(def, i){ var p = pl[i] && typeof pl[i] === 'object' ? pl[i] : null; return p ? {label: String(p.label || def.label).slice(0, 12), money: Math.max(0, Math.round(num(p.money, 0))), pts: Math.max(0, Math.round(num(p.pts, 0))), off: i > 0 && !!p.off} : def; });
   S.sections = arr(o.sections).filter(function(x){ return x && IDRE.test(x.id); }).map(function(x){ return {id: x.id, code: String(x.code || '').slice(0, 4), name: String(x.name || 'Section').slice(0, 80), money: moneyArr(x.money)}; });
@@ -852,10 +874,11 @@ function clean(o){
   var clsOk = {}; S.classes.forEach(function(c){ clsOk[c.id] = 1; });
   var nos = {};
   S.exhibitors = arr(o.exhibitors).filter(function(e){ return e && IDRE.test(e.id) && num(e.no, 0) >= 1; }).map(function(e){
-    return {id: e.id, no: Math.round(+e.no), name: String(e.name || '').slice(0, 120), junior: !!e.junior, member: e.member !== false, paid: !!e.paid, donate: !!e.donate, tags: String(e.tags || '').slice(0, 80)};
+    return {id: e.id, no: Math.round(+e.no), name: String(e.name || '').slice(0, 120), junior: !!e.junior, member: e.member !== false, paid: !!e.paid, donate: !!e.donate, tags: String(e.tags || '').slice(0, 80),
+            printed: Array.isArray(e.printed) ? e.printed.filter(function(x){ return typeof x === 'string' && IDRE.test(x); }) : null};
   }).filter(function(e){ if(nos[e.no]) return false; nos[e.no] = 1; return true; });
   var exOk = {}; S.exhibitors.forEach(function(e){ exOk[e.id] = 1; });
-  var en = obj(o.entries); for(var k in en) if(exOk[k] && Array.isArray(en[k])) S.entries[k] = en[k].filter(function(c){ return clsOk[c]; });
+  var en = obj(o.entries); for(var k in en) if(exOk[k] && Array.isArray(en[k])){ var seenC = {}; S.entries[k] = en[k].filter(function(c){ if(!clsOk[c] || (!S.show.multi && seenC[c])) return false; seenC[c] = 1; return true; }); }
   var rs = obj(o.results); for(var k2 in rs){
     var r = rs[k2]; if(!clsOk[k2] || !r || typeof r !== 'object') continue;
     S.results[k2] = {none: !!r.none, p: (Array.isArray(r.p) ? r.p : []).slice(0, 6).map(function(v){
@@ -864,17 +887,22 @@ function clean(o){
     })};
   }
   S.trophies = arr(o.trophies).filter(function(t){ return t && IDRE.test(t.id); }).map(function(t){
-    var kind = ['points', 'money', 'class'].indexOf(t.kind) >= 0 ? t.kind : (t.kind === 'pick' ? 'class' : 'points');
+    var kind = ['points', 'money', 'class', 'firsts'].indexOf(t.kind) >= 0 ? t.kind : (t.kind === 'pick' ? 'class' : 'points');
+    var cls = clsOk[t.cls] ? t.cls : '';
+    if(t.kind === 'pick' && !cls){   // v1 "judges' choice" stored a person; find the class from its note ("Class 7, rose") or the class they won
+      var mm = /class\s*([A-Za-z]{0,3}\d{1,4}[A-Za-z]?)/i.exec(t.pickNote || ''), hit = mm && S.classes.filter(function(c){ return c.code.toLowerCase() === mm[1].toLowerCase(); })[0];
+      if(hit) cls = hit.id;
+    }
     var noNames = String(t.noNames || '');
     if(Array.isArray(t.exclude)) t.exclude.forEach(function(id){ var e = arr(o.exhibitors).filter(function(x){ return x && x.id === id; })[0]; if(e && e.name) noNames += (noNames ? ', ' : '') + String(e.name); });
     return {id: t.id, name: String(t.name || 'Cup').slice(0, 80), kind: kind, sections: arr(t.sections).filter(function(x){ return secOk[x]; }), classes: String(t.classes || '').slice(0, 200),
-            tie: t.tie === 'share' ? 'share' : 'firsts', cls: clsOk[t.cls] ? t.cls : '', judgePick: !!t.judgePick || t.kind === 'pick', note: String(t.note || t.pickNote || '').slice(0, 80),
+            tie: ['share', 'two'].indexOf(t.tie) >= 0 ? t.tie : 'firsts', cls: cls, judgePick: !!t.judgePick || t.kind === 'pick', note: String(t.note || t.pickNote || '').slice(0, 80),
             junior: !!t.junior, members: !!t.members, group: String(t.group || '').slice(0, 40), noNames: noNames.slice(0, 400), noRepeat: Math.max(0, Math.min(5, Math.round(num(t.noRepeat, 0)))),
             history: arr(t.history).filter(function(h){ return h && num(h.year, 0) > 1900; }).slice(-10).map(function(h){ return {year: Math.round(+h.year), names: arr(h.names).map(function(n){ return String(n).slice(0, 120); }).slice(0, 6)}; })};
   });
   S.retired = arr(o.retired).map(function(x){ return Math.round(num(x, 0)); }).filter(function(x){ return x > 0; });
-  S.seq = Math.max(1, Math.round(num(o.seq, 1))); S.example = !!o.example;
-  var maxSeq = 1; [S.sections, S.classes, S.exhibitors, S.trophies].forEach(function(l){ l.forEach(function(x){ var n = parseInt(x.id.slice(1), 36); if(n > maxSeq) maxSeq = n; }); });
+  S.seq = Math.max(1, Math.min(1e9, Math.round(num(o.seq, 1)))); S.example = !!o.example;
+  var maxSeq = 1; [S.sections, S.classes, S.exhibitors, S.trophies].forEach(function(l){ l.forEach(function(x){ var n = parseInt(x.id.slice(1), 36); if(n > maxSeq && n < 1e9) maxSeq = n; }); });
   if(S.seq < maxSeq) S.seq = maxSeq;
   return S;
 }
@@ -928,7 +956,7 @@ function renderTop(){
     '<span>fees <b>' + money(o.totalFees) + '</b></span>' + (o.awards.length ? '<span>prizes <b>' + money(o.totalPrize) + '</b></span>' : '') +
     ((S.exhibitors.length || S.classes.length) && !S.example ? '<span title="Saved in this browser. Save a file to keep a copy.">' + (lastFile ? 'file saved ' + new Date(lastFile).toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) : 'no file saved yet') + '</span>' : '');
   $('exampleBar').hidden = !S.example;
-  if(n >= 10 && !S.example) trackOnce('ten-entries');
+  if(n >= 10 && !S.example) trackEver('ten-entries');
 }
 /* Re-rendering a table while one of its inputs has focus makes the browser fire change during removal; commit it first. */
 function flush(id){ var a = document.activeElement, el = $(id); if(a && el && el.contains(a) && a.blur) a.blur(); }
@@ -942,7 +970,7 @@ function renderSchedule(){
   if(empty) $('miniCard').innerHTML = cardHTML({show: 'Little Wapping Summer Show', code: '12', title: 'Vase of sweet peas, 9 stems', no: 37, name: 'Mrs J. Smith', showName: true});
   $('sName').value = S.show.name; $('sDate').value = S.show.date; $('sCur').value = S.show.cur;
   $('sFee').value = (S.show.fee / 100).toFixed(2); $('sJFee').value = (S.show.juniorFee / 100).toFixed(2); $('sFirst').value = S.show.firstNo;
-  $('sPaper').value = S.show.paper; $('sEqual').value = S.show.equal;
+  $('sPaper').value = S.show.paper; $('sEqual').value = S.show.equal; $('sMulti').checked = !!S.show.multi;
   $('sNFee').value = S.show.nonMemberFee == null ? '' : (S.show.nonMemberFee / 100).toFixed(2); $('sCap').value = S.show.feeCap == null ? '' : (S.show.feeCap / 100).toFixed(2);
   $('placesBody').innerHTML = S.show.places.map(function(p, i){
     return '<tr><td><input type="text" data-pl="label" data-i="' + i + '" value="' + esc(p.label) + '" style="width:80px"></td>' +
@@ -969,7 +997,7 @@ function renderSchedule(){
     var used = S.classes.some(function(c){ return c.sec === s.id; });
     return '<tr><td><input type="text" data-sn="' + esc(s.id) + '" value="' + esc(s.name) + '" aria-label="Section name"></td><td><input type="text" data-sm="' + esc(s.id) + '" placeholder="usual" value="' + esc(moneyList(s.money)) + '" style="width:150px" aria-label="Prize money for ' + esc(s.name) + '"></td>' +
       '<td>' + (used ? '' : '<button class="del" data-sdel="' + esc(s.id) + '" aria-label="Delete empty section">×</button>') + '</td></tr>';
-  }).join('') + '</tbody></table></div><p style="font-size:15px">Type e.g. <b>3, 2, 1</b> for ' + money(300) + ' / ' + money(200) + ' / ' + money(100) + '. A section can be deleted once it has no classes.</p>' : '';
+  }).join('') + '</tbody></table></div><p style="font-size:15px">Type e.g. <b>' + (S.show.cur === 'EUR' ? '3; 2; 1' : '3, 2, 1') + '</b> for ' + money(300) + ' / ' + money(200) + ' / ' + money(100) + '. A section can be deleted once it has no classes.</p>' : '';
 }
 function onShowField(){
   var f = C.parseMoney($('sFee').value), j = C.parseMoney($('sJFee').value), first = parseInt($('sFirst').value, 10);
@@ -980,10 +1008,10 @@ function onShowField(){
   var nf = C.parseMoney($('sNFee').value), cap = C.parseMoney($('sCap').value);
   if(!(nf != null && isNaN(nf))) S.show.nonMemberFee = nf;
   if(!(cap != null && isNaN(cap))) S.show.feeCap = cap;
-  S.show.paper = $('sPaper').value; S.show.equal = $('sEqual').value;
+  S.show.paper = $('sPaper').value; S.show.equal = $('sEqual').value; S.show.multi = $('sMulti').checked;
   touched(); save(); renderTop();
 }
-['sName','sDate','sCur','sFee','sJFee','sFirst','sNFee','sCap','sPaper','sEqual'].forEach(function(id){ $(id).addEventListener('change', onShowField); });
+['sName','sDate','sCur','sFee','sJFee','sFirst','sNFee','sCap','sPaper','sEqual','sMulti'].forEach(function(id){ $(id).addEventListener('change', onShowField); });
 $('placesBody').addEventListener('change', function(e){
   var t = e.target, i = +t.getAttribute('data-i'), k = t.getAttribute('data-pl'), p = S.show.places[i]; if(!p) return;
   if(k === 'label') p.label = t.value.trim() || p.label;
@@ -1041,6 +1069,11 @@ $('secMoney').addEventListener('click', function(e){
   S.trophies.forEach(function(t){ t.sections = (t.sections || []).filter(function(x){ return x !== id; }); });
   save(); renderSchedule();
 });
+$('addSec').addEventListener('click', function(){
+  if(S.example) S = C.blankShow();
+  S.sections.push({id: C.nid(S, 's'), code: '', name: 'New section', money: null}); touched(); save(); renderSchedule();
+  var ins = document.querySelectorAll('#secMoney [data-sn]'); if(ins.length){ ins[ins.length - 1].focus(); ins[ins.length - 1].select(); }
+});
 $('addClass').addEventListener('click', function(){
   if(S.example) S = C.blankShow();
   var codes = S.classes.map(function(c){ return parseInt(c.code, 10) || 0; }), next = String((codes.length ? Math.max.apply(null, codes) : 0) + 1);
@@ -1060,14 +1093,27 @@ function hintFor(text){
   if(r.bad.length) h += (h ? '<br>' : '') + '<span class="err">Not in the schedule: ' + esc(r.bad.join(', ')) + '</span>';
   var jn = juniorNote(r.codes, $('eJun').checked); if(jn) h += '<br>' + esc(jn.trim());
   var same = C.findByName(S, $('eName').value)[0]; if(same) h += '<br><b>' + esc(same.name) + ' is already exhibitor ' + same.no + '.</b>';
+  else { var sim = similarNames($('eName').value); if(sim.length) h += '<br>Same person as ' + sim.map(function(e){ return '<b>' + esc(e.name) + ' (' + e.no + ')</b>'; }).join(' or ') + '? If so, add the classes on their row below.'; }
   return h;
 }
 $('eCls').addEventListener('input', function(){ $('eHint').innerHTML = S.classes.length ? hintFor(this.value) : '<span class="err">Add the classes on step 1 first.</span>'; });
 function addExhibitor(name, text, junior){
   var e = {id: C.nid(S, 'e'), no: C.nextNo(S), name: name, junior: !!junior, member: true, paid: false, donate: false};
   S.exhibitors.push(e);
-  var r = C.setEntries(S, e.id, text);
+  var r = C.setEntries(S, e.id, text), cls = C.byId(S.classes), ids = S.entries[e.id];
+  if(!e.junior && ids.length && ids.every(function(id){ return cls[id] && cls[id].junior; })) e.junior = true;   // only junior classes: a child
   return {e: e, r: r};
+}
+/* "Beryl Kowalski" vs "Mrs B. Kowalski": same surname and same first initial (or one has only an initial). */
+function similarNames(name){
+  var n = C.normName(name).split(' '), last = n[n.length - 1], first = n.length > 1 ? n[0] : '';
+  if(!last) return [];
+  return S.exhibitors.filter(function(e){
+    var m = C.normName(e.name).split(' ');
+    if(m[m.length - 1] !== last || C.normName(e.name) === C.normName(name)) return false;
+    var f = m.length > 1 ? m[0] : '';
+    return !first || !f || f.charAt(0) === first.charAt(0);
+  });
 }
 /* Add classes to someone already on the list (same name came in twice: email, then post). */
 function mergeInto(e, text){
@@ -1084,7 +1130,7 @@ $('eAdd').addEventListener('click', function(){
   if(!S.classes.length){ say('Add the classes on step 1 first.'); return; }
   if(!name){ say('Type the exhibitor\'s name.'); $('eName').focus(); return; }
   if(S.example){ say('This is the example show. Click "Start my own show" first.'); return; }
-  var r = C.parseList(text, S.classes.map(function(c){ return c.code; }));
+  var r = C.parseList(text, S.classes.map(function(c){ return c.code; }), !!S.show.multi);
   if(!r.codes.length){ say(r.bad.length ? 'Not in the schedule: ' + r.bad.join(', ') + '. Nothing added.' : 'Type the classes, like 1, 4, 12-14.'); $('eCls').focus(); return; }
   if(r.bad.length && !confirm('Not in the schedule: ' + r.bad.join(', ') + '. Add the rest?')) return;
   var same = C.findByName(S, name)[0], msg;
@@ -1110,10 +1156,11 @@ $('bulkAdd').addEventListener('click', function(){
   lines.forEach(function(l){
     var m = /^(.+?)\s*(?::|\t)\s*(.*)$/.exec(l.trim());
     if(!m){ keep.push(l); problems.push('"' + l.trim() + '": no colon between name and classes'); return; }
-    var name = m[1].replace(/^"|"$/g, '').trim(), r = C.parseList(m[2], known);
+    var name = m[1].replace(/^"|"$/g, '').trim(), jr = /\s*\((junior|jr|j|child|age\s*\d{1,2}|\d{1,2})\)\s*$/i.test(name); name = name.replace(/\s*\((junior|jr|j|child|age\s*\d{1,2}|\d{1,2})\)\s*$/i, '');
+    var r = C.parseList(m[2], known, !!S.show.multi);
     if(!r.codes.length || r.bad.length){ keep.push(l); problems.push(name + ': ' + (r.bad.length ? 'not in schedule ' + r.bad.join(', ') : 'no classes')); return; }
     var same = C.findByName(S, name)[0];
-    if(same){ mergeInto(same, m[2]); merged++; } else { addExhibitor(name, m[2]); added++; }
+    if(same){ mergeInto(same, m[2]); merged++; } else { addExhibitor(name, m[2], jr); added++; }
   });
   if(added || merged){ touched(); trackOnce('exhibitor-added'); save(); }
   $('bulkBox').value = keep.join('\n');
@@ -1175,33 +1222,42 @@ function hasResults(){ for(var k in S.results){ var r = S.results[k]; if(r && r.
 
 /* ---------- 3 cards & sheets ---------- */
 function cardHTML(c){
-  return '<div class="ecard"><div class="sh"><span>' + esc(c.show || 'Show') + '</span><span>Entry card</span></div>' +
-    '<div class="mid"><div><div class="cl">Class<b>' + esc(c.code) + '</b></div><div class="ti">' + esc(c.title) + '</div></div>' +
+  return '<div class="ecard"><div class="sh"><span>' + esc(c.show || 'Show') + '</span><span>Entry card' + (c.of ? ' · ' + esc(c.of) : '') + '</span></div>' +
+    '<div class="mid"><div><div class="cl">Class<b>' + esc(c.code) + '</b></div><div class="ti">' + esc(c.title) + (S.show.multi ? '<br>Variety: ____________' : '') + '</div></div>' +
     '<div class="exn"><small>Exhibitor</small><b>' + esc(c.no) + '</b></div></div>' +
     '<div class="fold">fold here · name faces down</div><div class="nm">' + (c.showName ? 'Name: <b>' + esc(c.name) + '</b>' : 'Name: ______________________') + '</div></div>';
 }
+/* Cards to print. "new" = entries added since this exhibitor's cards were last printed (show-morning late entries);
+   "one" = one exhibitor. With several entries in one class, each card says "1 of 2". */
 function cardList(){
-  var cls = C.byId(S.classes), out = [];
+  var cls = C.byId(S.classes), out = [], which = $('cWhich').value, one = parseInt($('cOne').value, 10);
   S.exhibitors.slice().sort(function(a, b){ return a.no - b.no; }).forEach(function(e){
-    (S.entries[e.id] || []).forEach(function(cid){ var c = cls[cid]; if(c) out.push({c: c, e: e}); });
+    if(which === 'one' && e.no !== one) return;
+    var list = (S.entries[e.id] || []).filter(function(cid){ return cls[cid]; }), left = (e.printed || []).slice(), count = {}, seen = {};
+    list.forEach(function(cid){ count[cid] = (count[cid] || 0) + 1; });
+    list.forEach(function(cid){
+      seen[cid] = (seen[cid] || 0) + 1;
+      if(which === 'new'){ var k = left.indexOf(cid); if(k >= 0){ left.splice(k, 1); return; } }
+      out.push({c: cls[cid], e: e, of: count[cid] > 1 ? seen[cid] + ' of ' + count[cid] : ''});
+    });
   });
   if($('cOrder').value === 'cls'){
     var ord = {}; sortedClasses().forEach(function(c, i){ ord[c.id] = i; });
     out.sort(function(a, b){ return (ord[a.c.id] - ord[b.c.id]) || (a.e.no - b.e.no); });
-  } else {
-    out.forEach(function(x){ x.k = 0; });
-    out.sort(function(a, b){ return (a.e.no - b.e.no) || C.sortCodes(a.c.code, b.c.code); });
-  }
+  } else out.sort(function(a, b){ return (a.e.no - b.e.no) || C.sortCodes(a.c.code, b.c.code); });
   return out;
 }
 function renderCards(){
+  $('cOneL').hidden = $('cWhich').value !== 'one';
   var l = cardList();
   var first = l[0];
   $('cardPreview').innerHTML = first ? cardHTML({show: S.show.name, code: first.c.code, title: first.c.title, no: first.e.no, name: first.e.name, showName: $('cName').checked})
                                      : cardHTML({show: S.show.name || 'Your show', code: '12', title: 'Vase of sweet peas', no: 37, name: 'Exhibitor', showName: false});
-  $('cardCount').innerHTML = l.length ? '<b>' + l.length + '</b> cards on <b>' + Math.ceil(l.length / 8) + '</b> page' + (Math.ceil(l.length / 8) === 1 ? '' : 's') + '.' : 'Add exhibitors on step 2 first.';
+  $('cardCount').innerHTML = l.length ? '<b>' + l.length + '</b> cards on <b>' + Math.ceil(l.length / 8) + '</b> page' + (Math.ceil(l.length / 8) === 1 ? '' : 's') + '.' :
+    ($('cWhich').value === 'new' && S.exhibitors.length ? 'Every entry has been printed.' : $('cWhich').value === 'one' ? 'Type an exhibitor number.' : 'Add exhibitors on step 2 first.');
 }
-['cOrder','cName'].forEach(function(id){ $(id).addEventListener('change', renderCards); });
+['cOrder','cName','cWhich','cOne'].forEach(function(id){ $(id).addEventListener('change', renderCards); });
+$('cOne').addEventListener('input', renderCards);
 function gate(what){
   if(!overFree()) return true;
   track('pro-limit');
@@ -1224,9 +1280,10 @@ $('pCards').addEventListener('click', function(){
   var paper = S.show.paper, ch = paper === 'Letter' ? '2.45in' : '66mm', name = $('cName').checked, html = '';
   for(var i = 0; i < l.length; i += 8){
     html += '<div class="cards' + (i + 8 < l.length ? ' pbreak' : '') + '" style="--ch:' + ch + '">' + l.slice(i, i + 8).map(function(x){
-      return cardHTML({show: S.show.name, code: x.c.code, title: x.c.title, no: x.e.no, name: x.e.name, showName: name});
+      return cardHTML({show: S.show.name, code: x.c.code, title: x.c.title, no: x.e.no, name: x.e.name, showName: name, of: x.of});
     }).join('') + '</div>';
   }
+  if(!S.example){ var done = {}; l.forEach(function(x){ done[x.e.id] = 1; }); S.exhibitors.forEach(function(e){ if(done[e.id]) e.printed = (S.entries[e.id] || []).slice(); }); save(); }
   if(!S.example && l.length >= 10) track('real-cards');
   doPrint(html, paper, 'print-cards');
 });
@@ -1246,10 +1303,13 @@ $('pSheets').addEventListener('click', function(){
   if(!S.classes.length){ say('No classes yet.'); return; }
   if(!gate('Printing judges\' sheets')) return;
   var o = C.compute(S), exs = C.byId(S.exhibitors), on = C.placesOn(S), last = null, html = '<div class="sheet">';
-  html += '<h2>' + esc(S.show.name || 'Show') + ' · judges\' sheet</h2><table><thead><tr><th>Class</th><th>Title</th><th>Exhibitors on the bench</th>' +
+  html += '<h2>' + esc(S.show.name || 'Show') + ' · judges\' sheet</h2><table><thead><tr><th>Class</th><th>Title</th><th>Entered</th>' +
     on.map(function(p){ return '<th style="width:16mm">' + esc(p.label) + '</th>'; }).join('') + '</tr></thead><tbody>';
   sortedClasses().forEach(function(c){
-    if(c.sec !== last){ last = c.sec; html += '<tr><td colspan="' + (3 + on.length) + '"><b>' + esc(secName(c.sec) || '') + '</b></td></tr>'; }
+    if(c.sec !== last){
+      if(last !== null) html += '</tbody></table><div class="pbreak"></div><h2>' + esc(S.show.name || 'Show') + ' · judges\' sheet</h2><table><thead><tr><th>Class</th><th>Title</th><th>Entered</th>' + on.map(function(p){ return '<th style="width:16mm">' + esc(p.label) + '</th>'; }).join('') + '</tr></thead><tbody>';
+      last = c.sec; html += '<tr><td colspan="' + (3 + on.length) + '"><b>' + esc(secName(c.sec) || '') + '</b></td></tr>';
+    }
     var nos = (o.classEntries[c.id] || []).map(function(id){ return exs[id].no; }).sort(function(a, b){ return a - b; });
     html += '<tr><td><b>' + esc(c.code) + '</b></td><td>' + esc(c.title) + '</td><td>' + (nos.length ? nos.join(', ') + ' (' + nos.length + ')' : 'no entries') + '</td>' + on.map(function(){ return '<td></td>'; }).join('') + '</tr>';
   });
@@ -1321,6 +1381,8 @@ $('rGo').addEventListener('change', function(){
 function renderPrizes(){
   flush('cupList');
   var o = C.compute(S), locked = overFree();
+  $('payNote').textContent = o.maxPrize === 0 ? 'This show pays no prize money (all places are set to 0). Cups and results still work.' :
+    o.rounded > 0 ? 'Equal places: each share was rounded up to the nearest ' + money(C.step(cur())) + ' so it can be paid in coins. That adds ' + money(o.rounded) + ' in total.' : '';
   $('payTotal').textContent = money(o.payout); $('payEnv').textContent = o.envelopes.length; $('payDon').textContent = money(o.donated); $('payMax').textContent = money(o.maxPrize);
   var den = C.cur(cur()).den, mx = $('maxNote');
   mx.innerHTML = '<option value="">any</option>' + den.filter(function(d){ return d >= 100; }).map(function(d){ return '<option value="' + d + '"' + (S.show.maxNote === d ? ' selected' : '') + '>' + money(d) + '</option>'; }).join('');
@@ -1332,7 +1394,7 @@ function renderPrizes(){
   renderPro();
 }
 $('maxNote').addEventListener('change', function(){ S.show.maxNote = this.value ? +this.value : null; save(); renderPrizes(); });
-var KIND = {points: 'Most points', money: 'Most prize money', 'class': '1st prize in one class (fixed, or the judge\'s pick)'};
+var KIND = {points: 'Most points', money: 'Most prize money', firsts: 'Most 1st places (sweepstakes)', 'class': '1st prize in one class (fixed, or the judge\'s pick)'};
 function cupWinText(r){
   if(!r.winners.length) return '';
   var names = r.winners.map(function(e){ return e.name + ' (' + e.no + ')'; });
@@ -1343,14 +1405,14 @@ function cupHTML(r, locked){
   if(locked) win = '<div class="win">—</div><div class="why">Pro works out the winners for a show this size.</div>';
   else if(r.winners.length){
     win = '<div class="win">' + esc(cupWinText(r)) + '</div>';
-    var unit = t.kind === 'money' ? money : function(x){ return C.fmtPts(x) + ' pts'; };
+    var unit = t.kind === 'money' ? money : t.kind === 'firsts' ? function(x){ return x + ' × ' + S.show.places[0].label; } : function(x){ return C.fmtPts(x) + ' pts'; };
     var why = r.table.length ? unit(r.table[0].score) : (t.kind === 'class' ? '1st in class ' + esc(clsCode(t.cls)) + (t.note ? ', ' + esc(t.note) : '') : '');
     if(r.tie) why += r.tieBroken ? ' · tie broken on most ' + esc(S.show.places[0].label) + ' places' : (t.tie === 'share' ? ' · shared' : ' · <span class="err">still tied after counting places: the committee decides</span>');
     win += '<div class="why">' + why + '</div>';
   } else win = '<div class="win">—</div><div class="why">' + esc(r.note || 'No winner yet.') + '</div>';
   if(r.bad && r.bad.length && r.winners.length) win += '<div class="why err">Not classes in this schedule: ' + esc(r.bad.join(', ')) + '</div>';
   var table = (!locked && r.table.length) ? '<details><summary>Full table</summary><table class="tbl">' + r.table.slice(0, 15).map(function(x){
-    return '<tr><td>' + x.ex.no + '</td><td>' + esc(x.ex.name) + '</td><td class="n">' + (t.kind === 'money' ? money(x.score) : C.fmtPts(x.score)) + '</td><td>' + x.places.map(function(n, i){ return n ? n + '×' + esc(S.show.places[i].label) : ''; }).filter(Boolean).join(' ') + '</td></tr>';
+    return '<tr><td>' + x.ex.no + '</td><td>' + esc(x.ex.name) + '</td><td class="n">' + (t.kind === 'money' ? money(x.score) : t.kind === 'firsts' ? x.score : C.fmtPts(x.score)) + '</td><td>' + x.places.map(function(n, i){ return n ? n + '×' + esc(S.show.places[i].label) : ''; }).filter(Boolean).join(' ') + '</td></tr>';
   }).join('') + '</table></details>' : '';
   var secChips = S.sections.map(function(s){ return '<label><input type="checkbox" data-tsec="' + esc(s.id) + '"' + ((t.sections || []).indexOf(s.id) >= 0 ? ' checked' : '') + '>' + esc(s.name) + '</label>'; }).join('');
   var clsOpts = sortedClasses().map(function(c){ return '<option value="' + esc(c.id) + '"' + (t.cls === c.id ? ' selected' : '') + '>' + esc(c.code + ' ' + c.title) + '</option>'; }).join('');
@@ -1359,15 +1421,16 @@ function cupHTML(r, locked){
     '<label class="f">How it is won<select data-tf="kind">' + Object.keys(KIND).map(function(k){ return '<option value="' + k + '"' + (t.kind === k ? ' selected' : '') + '>' + KIND[k] + '</option>'; }).join('') + '</select></label>' +
     (t.kind !== 'class' ? '<div><b style="font-size:15px">Counting</b> <small>(none ticked = whole show)</small><div class="chips">' + secChips + '</div></div>' +
       '<label class="f">…or these classes <small>e.g. 1-12, 20, J1-J8</small><input type="text" data-tf="classes" value="' + esc(t.classes || '') + '"></label>' +
-      '<label class="f">If tied<select data-tf="tie"><option value="firsts"' + (t.tie !== 'share' ? ' selected' : '') + '>Most 1sts, then 2nds, then 3rds</option><option value="share"' + (t.tie === 'share' ? ' selected' : '') + '>Shared</option></select></label>'
+      '<label class="f">If tied<select data-tf="tie">' + [['firsts', 'Most 1sts, then 2nds, then 3rds…'], ['two', 'Most 1sts, then 2nds only; still tied = committee decides'], ['share', 'Shared']].map(function(o){ return '<option value="' + o[0] + '"' + ((t.tie || 'firsts') === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>'
     : '<label class="f">Class<select data-tf="cls"><option value="">(choose)</option>' + clsOpts + '</select></label>' +
       '<div class="chips"><label><input type="checkbox" data-tf="judgePick"' + (t.judgePick ? ' checked' : '') + '>The judge picks the class on the day (cleared for next year)</label></div>' +
+      '<label class="f">If there is an equal 1st<select data-tf="tie"><option value="firsts"' + (t.tie !== 'share' ? ' selected' : '') + '>The committee decides</option><option value="share"' + (t.tie === 'share' ? ' selected' : '') + '>Shared</option></select></label>' +
       '<label class="f">Note <small>(e.g. "rose, Mrs Smith\'s Peace")</small><input type="text" data-tf="note" value="' + esc(t.note || '') + '"></label>') +
     '<div class="chips"><label><input type="checkbox" data-tf="junior"' + (t.junior ? ' checked' : '') + '>Juniors only</label><label><input type="checkbox" data-tf="members"' + (t.members ? ' checked' : '') + '>Members only</label></div>' +
     '<label class="f">Only for a group <small>(matches "Groups" on step 2, e.g. resident, novice)</small><input type="text" data-tf="group" value="' + esc(t.group || '') + '"></label>' +
     '<label class="f">Can\'t win it <small>(names, e.g. judges, committee)</small><input type="text" data-tf="noNames" value="' + esc(t.noNames || '') + '"></label>' +
     '<label class="f">Winners can\'t win it again for<select data-tf="noRepeat">' + [0, 1, 2, 3].map(function(n){ return '<option value="' + n + '"' + ((+t.noRepeat || 0) === n ? ' selected' : '') + '>' + (n ? n + ' year' + (n > 1 ? 's' : '') : 'no limit') + '</option>'; }).join('') + '</select></label>' +
-    (hist ? '<div style="font-size:14px">Past winners: ' + hist + '</div>' : '') +
+    (hist && !locked ? '<div style="font-size:14px">Past winners: ' + hist + '</div>' : '') +
     '<button class="linkbtn" data-tdel style="align-self:flex-start;color:var(--bad)">Remove this cup</button></div>';
   return '<div class="cup" data-t="' + esc(t.id) + '"><input type="text" data-tf="name" value="' + esc(t.name) + '" aria-label="Cup name" style="width:100%;font-weight:700">' + win + table +
     '<details' + (t.fresh ? ' open' : '') + '><summary>Rules</summary>' + cfg + '</details></div>';
@@ -1469,9 +1532,10 @@ function saveFile(){
 }
 $('saveFile').addEventListener('click', saveFile);
 $('saveTop').addEventListener('click', saveFile);
-function csvCell(v){ v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+function csvCell(v){ v = String(v == null ? '' : v); if(/^[=+\-@\t\r]/.test(v)) v = "'" + v; return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
 function csv(rows){ return '﻿' + rows.map(function(r){ return r.map(csvCell).join(','); }).join('\r\n'); }
 $('csvEx').addEventListener('click', function(){
+  if(!gate('Excel export')) return;
   var o = C.compute(S), rows = [['No.', 'Name', 'Classes', 'Entries', 'Fee', 'Paid', 'Junior', 'Member', 'Groups', 'Prize money', 'Donates', 'Points', 'Places']];
   S.exhibitors.slice().sort(function(a, b){ return a.no - b.no; }).forEach(function(e){
     var q = o.per[e.id];
@@ -1481,6 +1545,7 @@ $('csvEx').addEventListener('click', function(){
   download(csv(rows), fileName('-exhibitors.csv'), 'text/csv'); track('csv-export');
 });
 $('csvRes').addEventListener('click', function(){
+  if(!gate('Excel export')) return;
   var exByNo = {}; S.exhibitors.forEach(function(e){ exByNo[e.no] = e; });
   var on = []; S.show.places.forEach(function(p, i){ if(!p.off) on.push(i); });
   var rows = [['Class', 'Title', 'Section', 'Entries'].concat(on.map(function(i){ return S.show.places[i].label; }))], o = C.compute(S);
@@ -1512,7 +1577,8 @@ $('loadFile').addEventListener('change', function(){
 $('nextYear').addEventListener('click', function(){
   if(S.example){ S = C.blankShow(); save(); showTab('schedule'); return; }
   if(!confirm('Keep the classes, prize money and cups, and clear all exhibitors, entries and placings? Each cup remembers this year\'s winner. Save a show file first if you want to keep this year.')) return;
-  C.nextYear(S); save(); showTab('entries'); say('Ready for next year.');
+  var keep = confirm('Keep last year\'s exhibitor names and numbers (with no entries), so regulars only need their classes typed?\n\nOK = keep names. Cancel = start with an empty list.');
+  C.nextYear(S, keep); save(); showTab('entries'); say('Ready for next year.');
 });
 
 /* ---------- Pro ---------- */
@@ -1531,7 +1597,7 @@ function unlock(){
   if(!v){ msg.innerHTML = '<span class="err">Type the email you paid with, or your gift code.</span>'; return; }
   if(v.indexOf('@') < 0){
     if(!window.crypto || !crypto.subtle){ msg.innerHTML = '<span class="err">This browser can\'t check codes. Try another browser.</span>'; return; }
-    sha256hex(v.toUpperCase().replace(/\s+/g, '')).then(function(hx){
+    sha256hex(v.toUpperCase().replace(/[^A-Z0-9]/g, '')).then(function(hx){
       if(GIFT.indexOf(hx) >= 0){ PRO = {gift: hx.slice(0, 12)}; lsSet(PROKEY, PRO); track('pro-gift'); track('gift-' + hx.slice(0, 8)); msg.textContent = ''; renderTab(); say('Pro unlocked. Enjoy the show!'); }
       else msg.innerHTML = '<span class="err">That code didn\'t match. Check the letters, or use the email you paid with.</span>';
     });
@@ -1592,10 +1658,10 @@ try{ var seenPro = false; new IntersectionObserver(function(es){ es.forEach(func
 if(GC_CODE && !SKIPGC){ var gs = document.createElement('script'); gs.async = true; gs.src = '//gc.zgo.at/count.js'; gs.setAttribute('data-goatcounter', 'https://' + GC_CODE + '.goatcounter.com/count'); document.head.appendChild(gs); }
 (function(){
   var via = (q0.get('via') || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 20), af = (q0.get('a') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
-  if(via) track('via-' + via);
-  if(af) track('aff-' + af);
-  if(q0.get('bought') === '1') track('bought-return');
-  if(hadData && (S.exhibitors.length || S.classes.length) && !S.example) track('return-visit');
+  if(via) trackSession('via-' + via);
+  if(af) trackSession('aff-' + af);
+  if(q0.get('bought') === '1') trackSession('bought-return');
+  if(hadData && (S.exhibitors.length || S.classes.length) && !S.example) trackSession('return-visit');
   if(SELFTEST && q0.get('fire') === 'all'){
     Object.keys(FUNNEL_EV).concat(['pro-notfound', 'backup-save', 'backup-load', 'gift-selftest']).forEach(function(n){ track(n); });
   }
