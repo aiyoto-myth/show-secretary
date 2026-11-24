@@ -799,9 +799,11 @@ var SRC = (function(){ try{
 }catch(e){ return ''; } })();
 var FUNNEL_EV = {'tool-start':1, 'example':1, 'schedule-read':1, 'exhibitor-added':1, 'ten-entries':1, 'print-cards':1, 'real-cards':1, 'print-receipts':1, 'print-sheets':1,
                  'result-entered':1, 'print-envelopes':1, 'print-payout':1, 'copy-results':1, 'print-results':1, 'cup-added':1, 'return-visit':1,
-                 'pro-view':1, 'pro-limit':1, 'buy-click':1, 'pro-unlocked':1, 'pro-gift':1};
+                 'pro-view':1, 'pro-limit':1, 'buy-click':1, 'bought-return':1, 'pro-unlocked':1, 'pro-gift':1, 'csv-export':1};
 var ONCE = {}, QUEUE = [], SENDING = false, GC_READY = 0, SELFTEST = /^selftest/.test(SRC);
+var SKIPGC = (function(){ try{ return localStorage.getItem('skipgc') === 't'; }catch(e){ return false; } })();   // hand testing: count nothing
 function track(name){
+  if(SKIPGC) return;
   try{
     if(SELFTEST){ QUEUE.push(name + '.selftest'); drain(); return; }   // self-test: only '<event>.selftest' is ever sent (media-c ledger SELFTEST_SUFFIX_ONLY)
     if(SRC && FUNNEL_EV[name]) QUEUE.push(name + '.' + SRC);
@@ -1587,11 +1589,12 @@ catch(err){
 $('footPro').addEventListener('click', function(e){ e.preventDefault(); track('footer-pro'); showTab('prizes'); $('proSec').scrollIntoView({behavior: 'smooth'}); });
 if(q0.get('bought') === '1' && !isPro()) setTimeout(function(){ $('proSec').scrollIntoView(); $('proKey').focus(); }, 400);
 try{ var seenPro = false; new IntersectionObserver(function(es){ es.forEach(function(x){ if(x.isIntersecting && !seenPro && !isPro()){ seenPro = true; track('pro-view'); } }); }).observe($('proSec')); }catch(e){}
-if(GC_CODE){ var gs = document.createElement('script'); gs.async = true; gs.src = '//gc.zgo.at/count.js'; gs.setAttribute('data-goatcounter', 'https://' + GC_CODE + '.goatcounter.com/count'); document.head.appendChild(gs); }
+if(GC_CODE && !SKIPGC){ var gs = document.createElement('script'); gs.async = true; gs.src = '//gc.zgo.at/count.js'; gs.setAttribute('data-goatcounter', 'https://' + GC_CODE + '.goatcounter.com/count'); document.head.appendChild(gs); }
 (function(){
   var via = (q0.get('via') || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 20), af = (q0.get('a') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
   if(via) track('via-' + via);
   if(af) track('aff-' + af);
+  if(q0.get('bought') === '1') track('bought-return');
   if(hadData && (S.exhibitors.length || S.classes.length) && !S.example) track('return-visit');
   if(SELFTEST && q0.get('fire') === 'all'){
     Object.keys(FUNNEL_EV).concat(['pro-notfound', 'backup-save', 'backup-load', 'gift-selftest']).forEach(function(n){ track(n); });
