@@ -91,7 +91,7 @@ textarea{width:100%;min-height:170px;font-size:16px;line-height:1.4}
 .ecard .sh{font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:5px 9px;border-bottom:1px solid #222;display:flex;justify-content:space-between;gap:8px}
 .ecard .mid{display:grid;grid-template-columns:1fr auto;gap:6px;padding:6px 9px;align-items:start}
 .ecard .cl{font-size:13px}
-.ecard .cl b{display:block;font-family:"Young Serif",Georgia,serif;font-size:34px;line-height:1;font-weight:400}
+.ecard .cl b{display:block;font-family:"Public Sans",Arial,sans-serif;font-size:34px;line-height:1;font-weight:700}
 .ecard .ti{font-size:13px;line-height:1.25;margin-top:4px}
 .ecard .exn{text-align:center;border:2px solid #111;border-radius:6px;padding:2px 10px}
 .ecard .exn small{display:block;font-size:10px;text-transform:uppercase}
@@ -114,7 +114,7 @@ textarea{width:100%;min-height:170px;font-size:16px;line-height:1.4}
 .rrow{display:grid;grid-template-columns:minmax(170px,1.2fr) repeat(var(--places),minmax(92px,1fr)) auto;gap:8px;align-items:center;background:#fff;border:1px solid var(--rule2);border-radius:8px;padding:6px 8px}
 .rrow .ct b{font-family:"Young Serif",Georgia,serif;font-size:19px;margin-right:6px}
 .rrow .ct small{display:block;color:var(--soft)}
-.pbox{display:flex;flex-direction:column;gap:2px}
+.pbox{display:flex;flex-direction:column;gap:2px;min-width:0}
 .pbox input{width:100%;min-height:40px;text-align:center;font-weight:700;font-size:18px;border-width:2px;border-left-width:8px}
 .pbox .who{font-size:13px;min-height:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .p0 input{border-left-color:var(--first)} .p1 input{border-left-color:var(--second)} .p2 input{border-left-color:var(--third)} .p3 input{border-left-color:var(--hc)}
@@ -180,7 +180,7 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
     <svg class="rosette" viewBox="0 0 48 48" aria-hidden="true"><g fill="#b3261e"><circle cx="24" cy="20" r="17"/></g><g fill="#fff3e0"><circle cx="24" cy="20" r="11"/></g><circle cx="24" cy="20" r="8" fill="#b3261e"/><path d="M17 34l-5 13 7-4 3 5 2-14zM31 34l5 13-7-4-3 5-2-14z" fill="#b3261e"/><text x="24" y="24" text-anchor="middle" font-size="10" font-family="Georgia" fill="#fff">1st</text></svg>
     <div><h1>Show Secretary</h1><p id="showLine">Entries, exhibit cards, prize money and cups for your show</p></div>
   </div>
-  <div class="tally" id="tally"></div>
+  <div class="tally"><span id="tally" style="display:contents"></span><button class="btn small ghost" id="saveTop" title="Download a copy of this show">Save file</button></div>
 </header>
 <nav class="steps" aria-label="Steps"><div class="in" role="tablist" id="tabs">
   <button role="tab" data-t="schedule"><span class="n">1</span>Schedule</button>
@@ -221,10 +221,15 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
       <label class="f">Non-member fee <small>(if different)</small><input type="text" class="money" id="sNFee" inputmode="decimal" placeholder="same"></label>
       <label class="f">Most one exhibitor pays <small>(cap)</small><input type="text" class="money" id="sCap" inputmode="decimal" placeholder="no cap"></label>
       <label class="f">First exhibitor no.<input type="number" class="num" id="sFirst" min="1"></label>
+      <label class="f">Paper<select id="sPaper"><option value="A4">A4</option><option value="Letter">US Letter</option></select></label>
     </div>
     <h3>Places, prize money and points</h3>
     <div class="scroll"><table class="tbl" style="max-width:560px"><thead><tr><th>Place</th><th>Prize money</th><th>Points for cups</th><th>Used</th></tr></thead><tbody id="placesBody"></tbody></table></div>
     <p style="font-size:15px;margin:6px 0 0">Classes or sections that pay more (a collection, a marrow) can have their own prize money below.</p>
+    <label class="f" style="margin-top:12px;max-width:620px">Equal places (two exhibits judged equal 2nd)<select id="sEqual">
+      <option value="pool">They share the money and points of the places they fill (2nd + 3rd); no 3rd is given</option>
+      <option value="full">Each gets the full 2nd prize and points; no 3rd is given</option>
+      <option value="split">They share the 2nd prize and points; a 3rd is still given</option></select></label>
   </div>
 
   <div class="panel" id="pastePanel">
@@ -254,7 +259,7 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
     </div>
     <div id="eHint" style="margin-top:8px;font-size:15px;min-height:22px"></div>
     <details style="margin-top:8px"><summary>Paste many at once</summary>
-      <p style="font-size:15px">One exhibitor per line: name, a colon, then the classes. <b>Ann Pike: 1, 3, 12-14</b></p>
+      <p style="font-size:15px">One exhibitor per line: name, a colon, then the classes. <b>Ann Pike: 1, 3, 12-14</b>. Two columns copied from Excel (name, classes) work too. A name already on the list gets the classes added.</p>
       <textarea id="bulkBox" style="min-height:110px"></textarea>
       <button class="btn small" id="bulkAdd">Add all</button> <span id="bulkMsg"></span>
     </details>
@@ -273,7 +278,6 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
     <p>One card per entry, eight to a page. Fold along the dashed line so the name faces down and the judges see only the numbers.</p>
     <div class="row">
       <label class="f">Order<select id="cOrder"><option value="ex">By exhibitor (to hand out)</option><option value="cls">By class (to lay out on the benches)</option></select></label>
-      <label class="f">Paper<select id="cPaper"><option value="A4">A4</option><option value="Letter">US Letter</option></select></label>
       <label class="f" style="flex-direction:row;gap:6px;align-items:center;min-height:42px"><input type="checkbox" id="cName" checked>Name under the fold</label>
       <button class="btn" id="pCards">Print exhibit cards</button>
     </div>
@@ -311,6 +315,7 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
       <div><div class="big" id="payMax">£0</div><div>most it could be (every place awarded)</div></div>
     </div>
     <h3>Coins and notes to fill the envelopes exactly</h3>
+    <label class="f" style="flex-direction:row;align-items:center;gap:8px">Biggest note to use<select id="maxNote"></select></label>
     <div class="coins" id="coinList"></div>
     <div class="row" style="margin-top:14px">
       <button class="btn" id="pEnv">Print envelope slips</button>
@@ -325,14 +330,17 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
   <div class="panel">
     <h2>Results for the newsletter</h2>
     <div class="row"><label class="f">Names as<select id="nmStyle"><option value="full">Full name</option><option value="init">Initial and surname</option><option value="no">Exhibitor number only</option></select></label>
+      <label class="f" style="flex-direction:row;gap:6px;align-items:center;min-height:42px"><input type="checkbox" id="nmJun" checked>Juniors: first name only</label>
       <button class="btn" id="copyRes">Copy results</button><button class="btn ghost" id="pRes">Print results</button></div>
     <textarea id="resText" readonly style="margin-top:10px;min-height:150px"></textarea>
   </div>
   <div class="panel">
     <h2>Keep a copy</h2>
-    <p>Your show is saved in this browser only. Save a file to move it to another computer or keep last year's show.</p>
+    <p>Your show is saved in this browser only. Save a file to move it to another computer, hand it to the next secretary, or keep last year's show. The CSV files open in Excel.</p>
     <div class="row">
       <button class="btn ghost" id="saveFile">Save show file</button>
+      <button class="btn ghost" id="csvEx">Exhibitors and money (CSV for Excel)</button>
+      <button class="btn ghost" id="csvRes">Results and cups (CSV for Excel)</button>
       <label class="btn ghost" for="loadFile">Open a show file</label><input type="file" id="loadFile" accept=".json,application/json" hidden>
       <button class="btn ghost" id="nextYear">Next year: keep classes and cups, clear entries</button>
     </div>
@@ -340,7 +348,7 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
   <div class="panel pro" id="proSec">
     <h2>Show Secretary Pro</h2>
     <div id="proBuy">
-      <p>Free covers a show with up to <b class="freeN2">60</b> entries. A bigger show needs Pro for the printouts, prize money and cups. <span class="price" id="proPrice"></span> once, for every show you run.</p>
+      <p>Free covers a show with up to <b class="freeN2">60</b> entries. A bigger show needs Pro for the printouts, prize money and cups. <span class="price" id="proPrice"></span> once, for every show you run, not a subscription. Checkout shows the price in your own currency and emails a receipt you can hand to your treasurer.</p>
       <div class="row"><a class="btn red" id="buyLink" href="#" target="_blank" rel="noopener">Buy Pro</a></div>
     </div>
     <div id="proState"></div>
@@ -352,7 +360,7 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
   </div>
 </section>
 </main>
-<footer>Show Secretary is a small tool made by one person. Your data never leaves this browser unless you save a file. <a href="?via=footer#t-prizes" id="footPro">Pro</a></footer>
+<footer>Show Secretary is a small tool made by one person. Your data never leaves this browser unless you save a file. <a href="#t-prizes" id="footPro">Pro</a></footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="printArea"></div>
 
@@ -361,16 +369,19 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
 var SSCore = (function(){
 'use strict';
 
-/* Money is kept in minor units (pence / cents) as integers everywhere. */
+/* Money is kept in minor units (pence / cents) as integers everywhere. Points are kept as integers x60 internally
+   (PT), so shares of an equal place (split 2..6 ways) stay exact and ties compare exactly. */
+var PT = 60;
 var CUR = {
-  GBP: {sym:'£', minor:'p', den:[2000,1000,500,200,100,50,20,10,5,2,1]},
-  USD: {sym:'$', minor:'¢', den:[2000,1000,500,100,25,10,5,1]},
-  CAD: {sym:'$', minor:'¢', den:[2000,1000,500,200,100,25,10,5]},
-  AUD: {sym:'$', minor:'c', den:[2000,1000,500,200,100,50,20,10,5]},
-  NZD: {sym:'$', minor:'c', den:[2000,1000,500,200,100,50,20,10]},
-  EUR: {sym:'€', minor:'c', den:[2000,1000,500,200,100,50,20,10,5,2,1]}
+  GBP: {sym:'£', den:[2000,1000,500,200,100,50,20,10,5,2,1]},
+  USD: {sym:'$', den:[2000,1000,500,100,25,10,5,1]},
+  CAD: {sym:'$', den:[2000,1000,500,200,100,25,10,5]},
+  AUD: {sym:'$', den:[2000,1000,500,200,100,50,20,10,5]},
+  NZD: {sym:'$', den:[2000,1000,500,200,100,50,20,10]},
+  EUR: {sym:'€', den:[2000,1000,500,200,100,50,20,10,5,2,1]}
 };
 function cur(code){ return CUR[code] || CUR.GBP; }
+function step(code){ var d = cur(code).den; return d[d.length - 1]; }
 
 function fmt(minor, code){
   var c = cur(code), n = Math.round(minor || 0), neg = n < 0; n = Math.abs(n);
@@ -378,147 +389,214 @@ function fmt(minor, code){
   var s = c.sym + Math.floor(n / 100) + (n % 100 ? '.' + ('0' + n % 100).slice(-2) : '');
   return (neg ? '-' : '') + s;
 }
-/* "1.50", "£1.50", "150p", "50p", "2" -> minor units; '' -> null; junk -> NaN */
+function fmtPts(p60){ return String(Math.round(p60 / PT * 100) / 100); }
+/* "1.50", "£1.50", "150p", "50p", "2", "1,50" (decimal comma), "1,000" -> minor units; '' -> null; anything else -> NaN */
 function parseMoney(s){
-  s = String(s == null ? '' : s).trim().replace(/[£$€,\s]/g, '');
+  s = String(s == null ? '' : s).trim().replace(/^(nz|au|us|ca)?[£$€]\s*/i, '');
   if(s === '') return null;
-  var m = /^(\d+)(p|c|¢)$/i.exec(s);
+  var m = /^(\d+)\s*(p|c|¢)$/i.exec(s);
   if(m) return parseInt(m[1], 10);
+  if(/^\d+,\d{1,2}$/.test(s)) s = s.replace(',', '.');
+  else if(/^\d{1,3}(,\d{3})+(\.\d{1,2})?$/.test(s)) s = s.replace(/,/g, '');
   if(!/^\d+(\.\d{1,2})?$/.test(s) && !/^\.\d{1,2}$/.test(s)) return NaN;
   return Math.round(parseFloat(s) * 100);
 }
+/* "3, 2, 1" / "3/2/1" / "£5 £3 £2" -> [300,200,100]. On a euro show "1,50; 1; 0,50" uses ; / or spaces. '' -> null, junk -> NaN */
+function parseMoneyList(t, code){
+  t = String(t == null ? '' : t).trim(); if(!t) return null;
+  var parts = code === 'EUR' ? t.split(/\s*[;\/]\s*|\s+/) : t.split(/\s*[;,\/]\s*|\s+/);
+  var out = [], ok = true;
+  parts.filter(Boolean).forEach(function(x){ var m = parseMoney(x); if(m == null || isNaN(m)) ok = false; else out.push(m); });
+  return ok && out.length ? out : NaN;
+}
 
-/* Breakdown of one amount into notes/coins (greedy is exact for these canonical systems). Returns {counts:{den:n}, rest} */
-function coins(minor, code){
-  var den = cur(code).den, counts = {}, r = Math.max(0, Math.round(minor || 0));
+/* Breakdown of one amount into notes/coins (greedy is exact for these canonical systems). maxDen limits the biggest
+   note (e.g. coins and £5 notes only). Returns {counts:{den:n}, rest} */
+function coins(minor, code, maxDen){
+  var den = cur(code).den.filter(function(d){ return !maxDen || d <= maxDen; }), counts = {}, r = Math.max(0, Math.round(minor || 0));
   for(var i = 0; i < den.length; i++){ var k = Math.floor(r / den[i]); if(k){ counts[den[i]] = k; r -= k * den[i]; } }
   return {counts: counts, rest: r};
 }
-/* Float for a list of envelopes: each envelope is made up on its own, so counts add per envelope. */
-function floatFor(amounts, code){
+function floatFor(amounts, code, maxDen){
   var tot = {}, rest = 0;
-  amounts.forEach(function(a){ var b = coins(a, code); rest += b.rest; for(var d in b.counts) tot[d] = (tot[d] || 0) + b.counts[d]; });
+  amounts.forEach(function(a){ var b = coins(a, code, maxDen); rest += b.rest; for(var d in b.counts) tot[d] = (tot[d] || 0) + b.counts[d]; });
   return {counts: tot, rest: rest};
 }
 
-/* Class codes are strings ("12", "12a", "A3", "101"). A list like "1, 3, 5-7 12a" -> codes in order, unique.
-   Ranges only between plain numbers, and only within the known codes when `known` is given. */
+/* ---------- class codes ---------- */
+function splitCode(c){ var m = /^([A-Za-z]*)(\d+)([A-Za-z]*)$/.exec(String(c)); return m ? {pre: m[1].toLowerCase(), n: +m[2], suf: m[3].toLowerCase()} : null; }
+function sortCodes(a, b){
+  var x = splitCode(a), y = splitCode(b);
+  if(!x || !y) return (x ? 1 : 0) - (y ? 1 : 0) || String(a).localeCompare(String(b));
+  return x.pre.localeCompare(y.pre) || (x.n - y.n) || x.suf.localeCompare(y.suf);
+}
+/* A list like "1, 3, 5-7 12a", "J1-J8", "J1-8", "1 - 3", "1 to 3" -> codes, unique, in typed order.
+   With `known` (the schedule's codes) a range takes every known code with that prefix whose number is in range
+   (11-13 includes 12a), any known code matches exactly (even "C"), and a token or range that matches nothing is in `bad`. */
 function parseList(text, known){
-  var out = [], bad = [], seen = {}, knownSet = null;
-  if(known){ knownSet = {}; known.forEach(function(k){ knownSet[String(k).toLowerCase()] = String(k); }); }
-  function add(c){
-    var key = c.toLowerCase();
-    if(knownSet){ if(!knownSet[key]){ bad.push(c); return; } c = knownSet[key]; }
-    if(!seen[c.toLowerCase()]){ seen[c.toLowerCase()] = 1; out.push(c); }
-  }
-  String(text || '').split(/[\s,;/&+]+|\band\b/i).forEach(function(tok){
-    tok = tok.replace(/^(class(es)?|no\.?|#)/i, '').replace(/[.)]+$/, '').trim();
+  var out = [], bad = [], seen = {}, knownMap = null;
+  if(known){ knownMap = {}; known.forEach(function(k){ knownMap[String(k).toLowerCase()] = String(k); }); }
+  function add(c){ var k = c.toLowerCase(); if(!seen[k]){ seen[k] = 1; out.push(c); } }
+  var s = String(text || '').replace(/([A-Za-z]{0,3}\d{1,4}[A-Za-z]?)\s*(?:[-–—]|\bto\b)\s*([A-Za-z]{0,3}\d{1,4}[A-Za-z]?)\b/gi, '$1-$2');
+  s.split(/[\s,;\/&+]+|\band\b/i).forEach(function(tok){
+    tok = tok.replace(/^(classes|class|no\.|#)/i, '').replace(/^[.(]+|[.):]+$/g, '').trim();
     if(!tok) return;
-    var r = /^(\d{1,4})\s*[-–]\s*(\d{1,4})$/.exec(tok);
+    if(knownMap && knownMap[tok.toLowerCase()]){ add(knownMap[tok.toLowerCase()]); return; }
+    var r = /^([A-Za-z]{0,3})(\d{1,4})[A-Za-z]?-([A-Za-z]{0,3})(\d{1,4})[A-Za-z]?$/.exec(tok);
     if(r){
-      var a = +r[1], b = +r[2];
-      if(b < a || b - a > 500){ bad.push(tok); return; }
-      for(var i = a; i <= b; i++){
-        if(knownSet && !knownSet[String(i)]) continue;   // gaps in the schedule are skipped, not errors
-        add(String(i));
-      }
+      var pre = r[1].toLowerCase(), pre2 = r[3].toLowerCase(), a = +r[2], b = +r[4];
+      if((pre2 && pre2 !== pre) || b < a || b - a > 500){ bad.push(tok); return; }
+      if(knownMap){
+        var hit = known.filter(function(k){ var x = splitCode(k); return x && x.pre === pre && x.n >= a && x.n <= b; }).sort(sortCodes);
+        if(!hit.length){ bad.push(tok); return; }
+        hit.forEach(function(k){ add(String(k)); });
+      } else for(var i = a; i <= b; i++) add(r[1] + i);
       return;
     }
+    if(knownMap){ bad.push(tok); return; }
     if(/^[A-Za-z]{0,3}\d{1,4}[A-Za-z]?$/.test(tok)) add(tok); else bad.push(tok);
   });
   return {codes: out, bad: bad};
 }
 
-/* Paste the schedule as text. Section lines: "SECTION A – VEGETABLES", "Section 3: Flowers", "Division B Fruit", or an
-   all-capitals line with no class number. Class lines: "1. Three potatoes", "Class 12 – Vase of sweet peas", "A3 Jar of jam",
-   "12a) ...". Prize lines ("Prizes: 1st £2 ...") and blank lines are skipped. */
+/* ---------- schedule paste ----------
+   Sections: "SECTION A – VEGETABLES", "Section 3: Flowers", "Division B Fruit", or an all-capitals line with no number.
+   Classes: "1. Three potatoes", "Class 12 – Vase of sweet peas", "A3 Jar of jam", "12a) ...", "• 4. Vase" (bullets),
+   "Class 3:" with the title on the next line.
+   Skipped: lines under a RULES / REGULATIONS / CONDITIONS / TIMETABLE heading until the next section; sentences
+   ("must", "will be", "please" ...); years, times ("10.30 Judging"), postcodes.
+   Prize lines ("Prizes: 1st £2, 2nd £1.50, 3rd £1") set the money of the section they sit in (or the show, before any
+   section); "(prize money £5, £3, £2)" or "(£5, £3, £2)" in a class title sets that class's money and is cut out.
+   A class number that repeats in a later section (schedules that number from 1 in each section) becomes section
+   letter + number ("B1"), listed in `renamed`. */
+var RULE_HEAD = /^(general\s+)?(rules|regulations|conditions(\s+of\s+entry)?|notes?\s+(to|for)\s+exhibitors|timetable|programme|show\s+rules|important\s+information|information\s+for\s+exhibitors)\b/i;
+var PROSE = /\b(must|shall|should|will be|may not|is final|please|entries close|closing date|no exhibitor|exhibitors? (may|are|will|must|can)|at the discretion|are not|is not|will not)\b/i;
+var SEC_KEY = /^(section|division|dept\.?|department|category|part)(?:\s+(.*)|\s*([-–—:.)].*))$/i;
+function sectionLine(line){
+  var k = SEC_KEY.exec(line); if(!k || PROSE.test(line)) return null;
+  var rest = (k[2] || k[3] || '').trim(), m = /^([A-Z]{1,2}|\d{1,2}|[IVX]{1,4})(?=\s|[-–—:.)]|$)\s*[-–—:.)]?\s*(.*)$/.exec(rest);
+  if(m) return {code: m[1].toUpperCase(), name: m[2].replace(/[:.\s]+$/, '').trim() || ('Section ' + m[1])};
+  if(/^[-–—:.)]/.test(rest)) return {code: '', name: rest.replace(/^[-–—:.)\s]+/, '').replace(/[:.\s]+$/, '').trim()};
+  if(/^[A-Z]/.test(rest) && rest.length <= 60) return {code: '', name: rest};
+  return null;
+}
 function parseSchedule(text){
-  var sections = [], classes = [], skipped = [], cur = null, codes = {};
+  var sections = [], classes = [], skipped = [], renamed = [], showMoney = null, cur = null, codes = {}, rules = false, pendingCode = null;
+  function newSection(code, name){ cur = {code: code || '', name: tidyName(name), money: null}; sections.push(cur); rules = false; }
+  function addClass(code, title){
+    title = title.trim(); var money = null;
+    var mm = /\s*\((?:prizes?(?:\s+money)?\s*:?\s*)?((?:[£$€]\s*\d[\d.]*|\d+p)(?:\s*[,\/;]\s*(?:[£$€]\s*\d[\d.]*|\d+p))*)\)\s*/i.exec(title);
+    if(mm){ var l = parseMoneyList(mm[1].replace(/[£$€]\s*/g, ''), 'GBP'); if(Array.isArray(l)){ money = l; title = (title.slice(0, mm.index) + ' ' + title.slice(mm.index + mm[0].length)).trim(); } }
+    if(!cur){ cur = {code: '', name: 'General', money: null}; sections.push(cur); }
+    var k = code.toLowerCase();
+    if(codes[k]){
+      var pre = (cur.code && /^[A-Z]+$/.test(cur.code) ? cur.code : (cur.name.replace(/[^A-Za-z]/g, '').charAt(0) || 'X')).toUpperCase();
+      var nc = /^\d/.test(code) ? pre + code : null;
+      if(codes[k] !== cur && nc && !codes[nc.toLowerCase()]){ renamed.push({from: code, to: nc, title: title, section: cur.name}); code = nc; k = nc.toLowerCase(); }
+      else { skipped.push(code + ' ' + title + '  (class number used twice)'); return; }
+    }
+    codes[k] = cur;
+    classes.push({code: code, title: title, section: cur, money: money});
+  }
   String(text || '').split(/\r?\n/).forEach(function(raw){
-    var line = raw.replace(/\t/g, ' ').replace(/\s+/g, ' ').trim();
+    var line = raw.replace(/\t/g, ' ').replace(/ /g, ' ').replace(/^\s*[•◦▪·●○■□➢►▶✓*\-–]\s+/, '').replace(/\s+/g, ' ').trim();
     if(!line) return;
-    var m = /^(section|division|dept\.?|department|category|part)\s+([A-Za-z0-9]{1,3})?\s*[-–—:.)]?\s*(.*)$/i.exec(line);
-    if(m){
-      cur = {code: (m[2] || '').toUpperCase(), name: (m[3] || '').replace(/[:.\s]+$/, '').trim() || ('Section ' + (m[2] || (sections.length + 1)))};
-      cur.name = tidyName(cur.name);
-      sections.push(cur); return;
-    }
-    m = /^(?:class\s*)?([A-Za-z]{0,3}\d{1,4}[A-Za-z]?)\s*(?:[.):\-–—]\s*|\s+)(.{2,})$/i.exec(line);
-    if(m && !/^(1st|2nd|3rd|4th)$/i.test(m[1]) && !/^\d{1,4}(st|nd|rd|th)\b/i.test(line)){
-      var code = m[1].replace(/^class/i, ''), title = m[2].trim();
-      if(/^[£$€]?\d+(\.\d\d)?p?$/.test(title)) { skipped.push(line); return; }   // a lone amount, not a class
-      if(codes[code.toLowerCase()]){ skipped.push(line); return; }
-      codes[code.toLowerCase()] = 1;
-      if(!cur){ cur = {code: '', name: 'General'}; sections.push(cur); }
-      classes.push({code: code, title: title, section: cur}); return;
-    }
+    var sl = sectionLine(line);
+    if(sl && sl.name.length <= 70){ newSection(sl.code, sl.name || ('Section ' + (sections.length + 1))); pendingCode = null; return; }
+    var m;
     var bare = line.replace(/\([^)]*\)/g, '').trim();
-    if(((/^[A-Z][A-Z &'’,\-–/]{3,60}$/.test(bare)) || (/\bsection\b/i.test(line) && line.length < 70 && !/[.!?]$/.test(line))) && !/PRIZE|RULE|ENTR(Y|IES)|NOTE|JUDG/i.test(bare)){
-      cur = {code: '', name: tidyName(line)}; sections.push(cur); return;
-    }
+    if(RULE_HEAD.test(line) && line.length < 60 && !/^\d/.test(line)){ rules = true; pendingCode = null; skipped.push(line); return; }
+    var pm = prizeLine(line);
+    if(pm){ if(cur) cur.money = pm; else showMoney = pm; skipped.push(line); return; }
+    if(/^[A-Z][A-Z &'’,\-–\/]{3,60}$/.test(bare) && !/PRIZE|RULE|ENTR(Y|IES)|NOTE|JUDG|SCHEDULE|TROPH|CUPS|AWARD|CONDITION|REGULATION/.test(bare)){ newSection('', line); pendingCode = null; return; }
+    if(rules){ skipped.push(line); return; }
+    if(pendingCode){ var pc = pendingCode; pendingCode = null; if(!/^\d/.test(line) && !PROSE.test(line) && /[A-Za-z]{2}/.test(line)){ addClass(pc, line); return; } }
+    var only = /^class\s*([A-Za-z]{0,3}\d{1,4}[A-Za-z]?)\s*[:.\-–]?$/i.exec(line);
+    if(only){ pendingCode = only[1]; return; }
+    if(/^(19|20)\d\d\b/.test(line) || /^\d{1,2}[.:]\d{2}\b/.test(line) || /^[A-Z]{1,2}\d[A-Z\d]?\s+\d[A-Z]{2}\b/.test(line)){ skipped.push(line); return; }
+    m = /^(?:class\s*)?([A-Za-z]{0,3}\d{1,4}[A-Za-z]?)\s*(?:[.):\-–—]\s*|\s+)(.{2,})$/i.exec(line);
+    if(m && !/^\d{1,4}(st|nd|rd|th)\b/i.test(line) && /[A-Za-z]{2}/.test(m[2]) && !PROSE.test(m[2]) && m[2].length <= 120){ addClass(m[1], m[2]); return; }
     skipped.push(line);
   });
-  // drop sections that got no classes (title lines, headings like "SCHEDULE")
   var used = sections.filter(function(s){ return classes.some(function(c){ return c.section === s; }); });
-  return {sections: used, classes: classes, skipped: skipped};
+  return {sections: used, classes: classes, skipped: skipped, renamed: renamed, showMoney: showMoney};
+}
+/* "Prizes: 1st £2, 2nd £1.50, 3rd £1" / "Prize money 1st 60p 2nd 40p 3rd 20p" -> [200,150,100] */
+function prizeLine(line){
+  if(!/^(prizes?|prize money|money)\b/i.test(line) && !/^1st\b/i.test(line)) return null;
+  var re = /(1st|2nd|3rd|4th|first|second|third)\s*(?:prize\s*)?[-–:=]?\s*([£$€]?\s*\d+(?:\.\d{1,2})?\s*p?)/gi, m, out = [];
+  while((m = re.exec(line))){ var v = parseMoney(m[2].replace(/\s+/g, '')); if(v != null && !isNaN(v)) out.push(v); }
+  return out.length ? out : null;
 }
 function tidyName(s){
   s = String(s).trim();
   var bare = s.replace(/\([^)]*\)/g, '');
-  if(bare === bare.toUpperCase() && /[A-Z]/.test(bare)) s = s.toLowerCase().replace(/(^|[\s\-–/(&])([a-z])/g, function(_, a, b){ return a + b.toUpperCase(); });
+  if(bare === bare.toUpperCase() && /[A-Z]/.test(bare)) s = s.toLowerCase().replace(/(^|[\s\-–\/(&])([a-z])/g, function(_, a, b){ return a + b.toUpperCase(); });
   return s;
 }
+var JUNIOR_SEC = /\b(junior|juniors|children'?s?|child|youth|young (people|gardeners?)|school|under\s*\d{1,2}\b|u\d{1,2}s?\b|age[ds]?\s*\d)/i;
+var JUNIOR_TITLE = /^\(?(junior|child|children)\b|\b(aged?\s*\d{1,2}|under\s*\d{1,2}\s*(yrs|years)|\d{1,2}\s*(yrs|years)\s*(and|&)\s*under|for children)\b/i;
 
 /* ---------- the show ---------- */
+function defaultPlaces(){
+  return [{label: '1st', money: 150, pts: 3}, {label: '2nd', money: 100, pts: 2}, {label: '3rd', money: 50, pts: 1},
+          {label: 'VHC', money: 0, pts: 0, off: true}, {label: 'HC', money: 0, pts: 0, off: true}, {label: 'C', money: 0, pts: 0, off: true}];
+}
 function blankShow(){
   return {
-    v: 1,
-    show: {name: '', date: '', cur: 'GBP', fee: 50, juniorFee: 0, nonMemberFee: null, feeCap: null, firstNo: 1,
-           places: [{label: '1st', money: 150, pts: 3}, {label: '2nd', money: 100, pts: 2}, {label: '3rd', money: 50, pts: 1}, {label: 'HC', money: 0, pts: 0, off: true}]},
-    sections: [], classes: [], exhibitors: [], entries: {}, results: {}, trophies: [], seq: 1
+    v: 2,
+    show: {name: '', date: '', cur: 'GBP', fee: 50, juniorFee: 0, nonMemberFee: null, feeCap: null, firstNo: 1, paper: 'A4', equal: 'pool',
+           places: defaultPlaces()},
+    sections: [], classes: [], exhibitors: [], entries: {}, results: {}, trophies: [], retired: [], seq: 1
   };
 }
 function nid(S, p){ S.seq = (S.seq || 1) + 1; return p + S.seq.toString(36); }
 function placesOn(S){ return S.show.places.filter(function(p){ return !p.off; }); }
-
 function byId(list){ var o = {}; list.forEach(function(x){ o[x.id] = x; }); return o; }
+function normName(n){ return String(n || '').toLowerCase().replace(/^(mr|mrs|ms|miss|mx|dr|rev|revd)\.?\s+/, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim(); }
+function showYear(S){ var y = parseInt(String(S.show.date || '').slice(0, 4), 10); return y > 1900 ? y : new Date().getFullYear(); }
 
-/* Money for place index i (0 = 1st) in class c: class override, then section override, then show default. Arrays may be shorter. */
 function placeMoney(S, c, i){
   var sec = S.sections.filter(function(s){ return s.id === c.sec; })[0];
   if(c.money && c.money[i] != null) return c.money[i];
   if(sec && sec.money && sec.money[i] != null) return sec.money[i];
   var p = S.show.places[i]; return p ? (p.money || 0) : 0;
 }
-function placePts(S, i){ var p = S.show.places[i]; return p ? (p.pts || 0) : 0; }
-/* Fee for one entry: the class's own fee, else the junior fee for junior classes, else the non-member fee (when the show
-   sets one) for non-members, else the usual fee. A per-exhibitor cap (e.g. NZ "$1 per entry, capped at $10") is applied in compute. */
+function placePts(S, i){ var p = S.show.places[i]; return p && !p.off ? (p.pts || 0) : 0; }
+/* Fee for one entry: class's own fee, else junior fee (junior classes), else non-member fee (if set), else the usual fee.
+   A per-exhibitor cap (NZ: "$1 per entry, capped at $10") is applied in compute. */
 function entryFee(S, c, e){
   if(c.fee != null) return c.fee;
   if(c.junior) return S.show.juniorFee || 0;
   if(e && e.member === false && S.show.nonMemberFee != null) return S.show.nonMemberFee;
   return S.show.fee || 0;
 }
-/* A results box holds one exhibitor number, or several for an equal place ("equal 2nd"): their prize money and points are
-   divided equally (Taunton FS rule: "total divided equally between each of those joint winners"). */
+/* A results box holds one exhibitor number, or several for an equal place ("12=15"). */
 function placeNos(v){
   if(v === '' || v == null) return [];
   return (Array.isArray(v) ? v : [v]).map(function(x){ return parseInt(x, 10); }).filter(function(x){ return x > 0; });
 }
-
 function entryCount(S){ var n = 0; for(var k in S.entries) n += (S.entries[k] || []).length; return n; }
+/* Next free exhibitor number. Never one that is in the placings or belonged to a deleted exhibitor (S.retired). */
 function nextNo(S){
   var used = {}, n = Math.max(1, S.show.firstNo || 1);
   S.exhibitors.forEach(function(e){ used[e.no] = 1; });
+  (S.retired || []).forEach(function(x){ used[x] = 1; });
+  for(var k in S.results){ var r = S.results[k]; (r && Array.isArray(r.p) ? r.p : []).forEach(function(v){ placeNos(v).forEach(function(x){ used[x] = 1; }); }); }
   while(used[n]) n++;
   return n;
 }
 
-/* Everything the outputs need, computed fresh from S. Results hold exhibitor NUMBERS (what is written on the card), so a
-   late exhibitor added after judging still matches. */
+/* Equal places (S.show.equal):
+   'pool'  - joint winners share the money and points of the places they fill (two equal 2nds share 2nd + 3rd);
+             those places are not awarded again. RHS-style; the default.
+   'full'  - each joint winner gets the full money and points of the place; the next places are not awarded.
+   'split' - joint winners share only that place's money and points; the next place is still awarded.
+   Money shares round UP to the currency's smallest coin, so every share can be paid from the float. */
+function shareUp(amount, k, st){ if(k <= 1) return amount; return Math.ceil(amount / k / st - 1e-9) * st; }
 function compute(S){
-  var P = S.show.places.length, on = S.show.places.map(function(p){ return !p.off; });
-  var cls = byId(S.classes), exs = byId(S.exhibitors), secs = byId(S.sections);
+  var P = S.show.places.length, on = S.show.places.map(function(p){ return !p.off; }), st = step(S.show.cur), rule = S.show.equal || 'pool';
+  var cls = byId(S.classes);
   var exByNo = {}; S.exhibitors.forEach(function(e){ exByNo[e.no] = e; });
   var warn = [], per = {}, entered = {}, classEntries = {};
   S.exhibitors.forEach(function(e){
@@ -527,62 +605,72 @@ function compute(S){
     if(S.show.feeCap != null && fee > S.show.feeCap) fee = S.show.feeCap;
     per[e.id] = {ex: e, entries: list.length, fee: fee, paid: e.paid ? fee : 0, wins: [], prize: 0, pts: 0, places: new Array(P).fill(0)};
   });
-  var awards = [];   // {cls, place, ex, money, pts}
+  var awards = [];
   S.classes.forEach(function(c){
-    var r = S.results[c.id]; if(!r || r.none) return;
-    var seenEx = {};
-    (r.p || []).forEach(function(v, i){
-      if(i >= P || !on[i]) return;
-      var nos = placeNos(v), k = nos.length;
+    var r = S.results[c.id]; if(!r || r.none || !Array.isArray(r.p)) return;
+    var seenEx = {}, covered = {}, filled = function(i){ return placeNos(r.p[i]).length > 0; };
+    for(var i = 0; i < P; i++){
+      if(!on[i]) continue;
+      var nos = placeNos(r.p[i]), k = nos.length; if(!k) continue;
+      if(covered[i]) warn.push({cls: c.id, msg: 'Class ' + c.code + ': ' + S.show.places[i].label + ' is filled, but the equal place above already takes it.'});
+      var money, pts;
+      if(rule === 'split'){ money = shareUp(placeMoney(S, c, i), k, st); pts = placePts(S, i) * PT / k; }
+      else if(rule === 'full'){ money = placeMoney(S, c, i); pts = placePts(S, i) * PT; }
+      else { var mo = 0, po = 0, got = 0; for(var j = i; j < P && got < k; j++){ if(!on[j]) continue; mo += placeMoney(S, c, j); po += placePts(S, j) * PT; got++; } money = shareUp(mo, k, st); pts = po / k; }
+      if(k > 1 && rule !== 'split'){ var cnt = 0; for(var j2 = i + 1; j2 < P && cnt < k - 1; j2++){ if(on[j2]){ covered[j2] = 1; cnt++; } } }
+      pts = Math.round(pts);
       nos.forEach(function(no){
         var e = exByNo[no];
         if(!e){ warn.push({cls: c.id, msg: 'Class ' + c.code + ': ' + S.show.places[i].label + ' is exhibitor ' + no + ', who is not on the list.'}); return; }
-        var exId = e.id;
-        if(seenEx[exId]) warn.push({cls: c.id, msg: 'Class ' + c.code + ': exhibitor ' + e.no + ' is placed twice.'});
-        seenEx[exId] = 1;
-        if(!entered[exId + '|' + c.id]) warn.push({cls: c.id, msg: 'Class ' + c.code + ': exhibitor ' + e.no + ' (' + e.name + ') won ' + S.show.places[i].label + ' but has no entry in this class.'});
-        var a = {cls: c, place: i, ex: e, money: Math.floor(placeMoney(S, c, i) / k), pts: placePts(S, i) / k, equal: k > 1};
+        if(seenEx[e.id]) warn.push({cls: c.id, msg: 'Class ' + c.code + ': exhibitor ' + e.no + ' is placed twice.'});
+        seenEx[e.id] = 1;
+        if(!entered[e.id + '|' + c.id]) warn.push({cls: c.id, msg: 'Class ' + c.code + ': exhibitor ' + e.no + ' (' + e.name + ') is placed ' + S.show.places[i].label + ' but has no entry in this class.'});
+        if(c.junior && !e.junior) warn.push({cls: c.id, msg: 'Class ' + c.code + ' is a junior class; exhibitor ' + e.no + ' (' + e.name + ') is not marked junior.'});
+        var a = {cls: c, place: i, ex: e, money: money, pts: pts, equal: k > 1};
         awards.push(a);
-        var q = per[exId]; q.wins.push(a); q.prize += a.money; q.pts += a.pts; q.places[i]++;
+        var q = per[e.id]; q.wins.push(a); q.prize += a.money; q.pts += a.pts; q.places[i]++;
       });
-    });
-    for(var i = 1; i < P; i++) if(on[i] && on[i - 1] && r.p && placeNos(r.p[i]).length && !placeNos(r.p[i - 1]).length) { warn.push({cls: c.id, msg: 'Class ' + c.code + ': ' + S.show.places[i].label + ' is filled but ' + S.show.places[i - 1].label + ' is empty.'}); break; }
+    }
+    var prev = -1;
+    for(var i2 = 0; i2 < P; i2++){
+      if(!on[i2]) continue;
+      if(filled(i2) && prev >= 0 && !filled(prev) && !covered[prev]){ warn.push({cls: c.id, msg: 'Class ' + c.code + ': ' + S.show.places[i2].label + ' is filled but ' + S.show.places[prev].label + ' is empty.'}); break; }
+      prev = i2;
+    }
   });
   var totalPrize = 0, totalFees = 0, totalPaid = 0, maxPrize = 0;
-  for(var k in per){ totalPrize += per[k].prize; totalFees += per[k].fee; totalPaid += per[k].paid; }
+  for(var id in per){ totalPrize += per[id].prize; totalFees += per[id].fee; totalPaid += per[id].paid; }
   S.classes.forEach(function(c){ for(var i = 0; i < P; i++) if(on[i]) maxPrize += placeMoney(S, c, i); });
-  var envelopes = [];
-  S.exhibitors.forEach(function(e){ var q = per[e.id]; if(q.prize > 0 && !e.donate) envelopes.push(q); });
-  var donated = 0; S.exhibitors.forEach(function(e){ if(e.donate) donated += per[e.id].prize; });
-  var tro = S.trophies.map(function(t){ return trophyResult(S, t, awards, exs); });
+  var envelopes = [], donated = 0;
+  S.exhibitors.forEach(function(e){ var q = per[e.id]; if(q.prize > 0){ if(e.donate) donated += q.prize; else envelopes.push(q); } });
+  var tro = S.trophies.map(function(t){ return trophyResult(S, t, awards); });
   return {per: per, awards: awards, warn: warn, totalPrize: totalPrize, totalFees: totalFees, totalPaid: totalPaid, maxPrize: maxPrize,
           envelopes: envelopes, donated: donated, payout: totalPrize - donated, trophies: tro, classEntries: classEntries, entries: entryCount(S)};
 }
 
-/* Trophy rules:
-   points  - most points from places in the chosen sections/classes
-   money   - most prize money in the chosen sections/classes (e.g. RHS Banksian Medal: horticultural classes)
-   class   - whoever wins 1st in one class
-   pick    - judges' choice (Best in Show): the secretary picks the exhibitor
-   Eligible: junior-only / members-only / not in the exclude list. Ties: 'firsts' = most 1sts, then 2nds...; 'share' = shared. */
-function trophyResult(S, t, awards, exs){
-  var res = {t: t, winners: [], table: [], tie: false, note: ''};
-  if(t.kind === 'pick'){
-    if(t.pick && exs[t.pick]) res.winners = [exs[t.pick]];
-    else res.note = 'Not picked yet.';
-    return res;
-  }
-  var inScope = scopeFn(S, t);
-  if(t.kind === 'class'){
-    var w = awards.filter(function(a){ return a.place === 0 && inScope(a.cls) && eligible(t, a.ex); });
+/* Cups:
+   points - most points from places in the chosen sections/classes (RHS Banksian Medal: most points in the horticultural classes)
+   money  - most prize money in the chosen sections/classes
+   class  - the 1st prize in one class (a fixed class, or the class the judge picks on the day for "best exhibit")
+   Who can win: juniors only / members only / a group tag / not a name on the "can't win" list / not a winner in the
+   last N years (the cup's history, kept by "next year"). Ties: 'firsts' = most 1sts, then 2nds ...; 'share' = shared. */
+function trophyResult(S, t, awards){
+  var res = {t: t, winners: [], table: [], tie: false, tieBroken: false, undecided: false, note: '', bad: []};
+  var ctx = eligCtx(S, t);
+  if(t.kind === 'class' || t.kind === 'pick'){
     if(!t.cls){ res.note = 'Choose the class.'; return res; }
-    res.winners = w.map(function(a){ return a.ex; });
-    if(!w.length) res.note = 'No eligible 1st place yet.';
+    var w = awards.filter(function(a){ return a.place === 0 && a.cls.id === t.cls; });
+    var ok = w.filter(function(a){ return eligible(t, a.ex, ctx); });
+    res.winners = ok.map(function(a){ return a.ex; });
+    if(!w.length) res.note = 'No 1st prize in that class yet.';
+    else if(!ok.length) res.note = 'The 1st prize winner can\'t win this cup (see its rules).';
+    if(ok.length > 1){ res.tie = true; res.undecided = t.tie !== 'share'; }
     return res;
   }
+  var scope = scopeFn(S, t); res.bad = scope.bad;
   var tally = {};
   awards.forEach(function(a){
-    if(!inScope(a.cls) || !eligible(t, a.ex)) return;
+    if(!scope.has(a.cls) || !eligible(t, a.ex, ctx)) return;
     var r = tally[a.ex.id] = tally[a.ex.id] || {ex: a.ex, score: 0, places: new Array(S.show.places.length).fill(0)};
     r.score += t.kind === 'money' ? a.money : a.pts; r.places[a.place]++;
   });
@@ -590,21 +678,28 @@ function trophyResult(S, t, awards, exs){
   function cmpPlaces(a, b){ for(var i = 0; i < a.places.length; i++){ if(a.places[i] !== b.places[i]) return b.places[i] - a.places[i]; } return 0; }
   rows.sort(function(a, b){ return (b.score - a.score) || cmpPlaces(a, b) || (a.ex.no - b.ex.no); });
   res.table = rows;
-  if(!rows.length){ res.note = 'No eligible places yet.'; return res; }
+  if(!rows.length){ res.note = scope.bad.length ? 'Not classes in this schedule: ' + scope.bad.join(', ') : 'No eligible places yet.'; return res; }
   var top = rows.filter(function(r){ return r.score === rows[0].score; });
-  if(top.length > 1 && t.tie !== 'share'){
-    var best = top.filter(function(r){ return cmpPlaces(r, top[0]) === 0; });
-    res.tie = top.length > 1;
-    res.tieBroken = best.length === 1;
-    top = best;
-  } else if(top.length > 1) res.tie = true;
+  if(top.length > 1){
+    res.tie = true;
+    if(t.tie !== 'share'){
+      var best = top.filter(function(r){ return cmpPlaces(r, top[0]) === 0; });
+      res.tieBroken = best.length === 1; res.undecided = best.length > 1; top = best;
+    }
+  }
   res.winners = top.map(function(r){ return r.ex; });
   return res;
 }
-function eligible(t, e){
+function eligCtx(S, t){
+  var no = {}, y = showYear(S), yrs = +t.noRepeat || 0;
+  String(t.noNames || '').split(/[,;\n]/).forEach(function(n){ n = normName(n); if(n) no[n] = 1; });
+  (t.history || []).forEach(function(h){ if(yrs && h.year < y && h.year >= y - yrs) (h.names || []).forEach(function(n){ no[normName(n)] = 1; }); });
+  return {no: no};
+}
+function eligible(t, e, ctx){
   if(t.junior && !e.junior) return false;
   if(t.members && e.member === false) return false;
-  if(t.exclude && t.exclude.indexOf(e.id) >= 0) return false;
+  if(ctx && ctx.no[normName(e.name)]) return false;
   if(t.group && String(t.group).trim()){
     var want = String(t.group).trim().toLowerCase(), have = String(e.tags || '').toLowerCase().split(/\s*,\s*/);
     if(have.indexOf(want) < 0) return false;
@@ -612,36 +707,38 @@ function eligible(t, e){
   return true;
 }
 function scopeFn(S, t){
-  if(t.kind === 'class') return function(c){ return c.id === t.cls; };
   var secs = {}; (t.sections || []).forEach(function(s){ secs[s] = 1; });
-  var codes = null;
+  var codes = null, bad = [];
   if(t.classes && String(t.classes).trim()){
-    codes = {}; parseList(t.classes, S.classes.map(function(c){ return c.code; })).codes.forEach(function(c){ codes[c.toLowerCase()] = 1; });
+    var r = parseList(t.classes, S.classes.map(function(c){ return c.code; })); bad = r.bad;
+    codes = {}; r.codes.forEach(function(c){ codes[c.toLowerCase()] = 1; });
   }
   var any = !(t.sections && t.sections.length) && !codes;
-  return function(c){ return any || secs[c.sec] || (codes && codes[String(c.code).toLowerCase()]); };
+  return {bad: bad, has: function(c){ return !!(any || secs[c.sec] || (codes && codes[String(c.code).toLowerCase()])); }};
 }
 
-/* Put parsed schedule into S (replaces sections/classes only when S has none; otherwise appends new codes). */
+/* Put a parsed schedule into S: new sections by name, new classes by code (existing codes are left alone). */
 function applySchedule(S, parsed){
   var have = {}; S.classes.forEach(function(c){ have[String(c.code).toLowerCase()] = 1; });
-  var secMap = new Map(), added = 0, dup = 0;
+  var secMap = new Map(), added = 0, dup = 0, junior = [];
   parsed.sections.forEach(function(ps){
     var ex = S.sections.filter(function(s){ return s.name.toLowerCase() === ps.name.toLowerCase(); })[0];
-    if(!ex){ ex = {id: nid(S, 's'), code: ps.code, name: ps.name, money: null}; S.sections.push(ex); }
+    if(!ex){ ex = {id: nid(S, 's'), code: ps.code, name: ps.name, money: ps.money || null}; S.sections.push(ex); }
+    else if(ps.money && !ex.money) ex.money = ps.money;
     secMap.set(ps, ex.id);
   });
+  if(parsed.showMoney) parsed.showMoney.forEach(function(m, i){ if(S.show.places[i]) S.show.places[i].money = m; });
   parsed.classes.forEach(function(pc){
     if(have[pc.code.toLowerCase()]){ dup++; return; }
     have[pc.code.toLowerCase()] = 1;
-    S.classes.push({id: nid(S, 'c'), code: pc.code, title: pc.title, sec: secMap.get(pc.section), money: null, fee: null,
-                    junior: /\b(junior|child|children|under\s*\d+|u\d{1,2}s?|age[ds]?\s*\d|years? old|school)\b/i.test(pc.title + ' ' + pc.section.name)});
+    var jr = JUNIOR_SEC.test(pc.section.name) || JUNIOR_TITLE.test(pc.title);
+    if(jr) junior.push(pc.code);
+    S.classes.push({id: nid(S, 'c'), code: pc.code, title: pc.title, sec: secMap.get(pc.section), money: pc.money || null, fee: null, junior: jr});
     added++;
   });
-  return {added: added, dup: dup};
+  return {added: added, dup: dup, junior: junior};
 }
 
-/* Add or update an exhibitor's entries from a class list text. Returns {codes, bad}. One entry per class per exhibitor. */
 function setEntries(S, exId, text){
   var r = parseList(text, S.classes.map(function(c){ return c.code; }));
   var map = {}; S.classes.forEach(function(c){ map[String(c.code).toLowerCase()] = c.id; });
@@ -652,15 +749,28 @@ function entriesText(S, exId){
   var cls = byId(S.classes);
   return (S.entries[exId] || []).filter(function(id){ return cls[id]; }).map(function(id){ return cls[id].code; }).join(', ');
 }
+function findByName(S, name){ var n = normName(name); return n ? S.exhibitors.filter(function(e){ return normName(e.name) === n; }) : []; }
 
-function sortCodes(a, b){
-  var ma = /^([A-Za-z]*)(\d+)(.*)$/.exec(String(a)) || ['', String(a), 0, ''], mb = /^([A-Za-z]*)(\d+)(.*)$/.exec(String(b)) || ['', String(b), 0, ''];
-  return ma[1].localeCompare(mb[1]) || (+ma[2] - +mb[2]) || String(ma[3]).localeCompare(String(mb[3]));
+/* "Next year": keep classes, money and cups; clear people. Each cup remembers this year's winners by name. */
+function nextYear(S){
+  var o = compute(S), y = showYear(S);
+  o.trophies.forEach(function(r){
+    if(!r.winners.length || r.undecided) return;
+    var h = (r.t.history || []).filter(function(x){ return x.year !== y; });
+    h.push({year: y, names: r.winners.map(function(e){ return e.name; })});
+    h.sort(function(a, b){ return a.year - b.year; }); if(h.length > 10) h.splice(0, h.length - 10);
+    r.t.history = h;
+  });
+  S.exhibitors = []; S.entries = {}; S.results = {}; S.retired = []; S.example = false;
+  S.trophies.forEach(function(t){ if(t.kind === 'pick') t.kind = 'class'; if(t.judgePick) t.cls = ''; });
+  if(/^\d{4}-/.test(S.show.date || '')) S.show.date = (y + 1) + S.show.date.slice(4);
 }
 
-return {CUR: CUR, cur: cur, fmt: fmt, parseMoney: parseMoney, coins: coins, floatFor: floatFor, parseList: parseList, parseSchedule: parseSchedule,
-        blankShow: blankShow, nid: nid, placesOn: placesOn, placeMoney: placeMoney, placePts: placePts, entryFee: entryFee, entryCount: entryCount,
-        nextNo: nextNo, compute: compute, placeNos: placeNos, applySchedule: applySchedule, setEntries: setEntries, entriesText: entriesText, sortCodes: sortCodes, byId: byId};
+return {PT: PT, CUR: CUR, cur: cur, step: step, fmt: fmt, fmtPts: fmtPts, parseMoney: parseMoney, parseMoneyList: parseMoneyList, coins: coins, floatFor: floatFor,
+        parseList: parseList, parseSchedule: parseSchedule, prizeLine: prizeLine, splitCode: splitCode, sortCodes: sortCodes,
+        blankShow: blankShow, defaultPlaces: defaultPlaces, nid: nid, placesOn: placesOn, placeMoney: placeMoney, placePts: placePts, entryFee: entryFee, entryCount: entryCount,
+        nextNo: nextNo, compute: compute, placeNos: placeNos, applySchedule: applySchedule, setEntries: setEntries, entriesText: entriesText, byId: byId,
+        normName: normName, findByName: findByName, showYear: showYear, nextYear: nextYear};
 })();
 /*CORE-END*/
 </script>
@@ -682,7 +792,7 @@ var KEY = 'sss.v1', PROKEY = 'sss.pro', FREE_ENTRIES = 60;
    the first one 1.5 s after count.js loads (its own pageview goes first). Pattern from Handbell Chart. ---------- */
 var GC_CODE = 'showsecretary';
 var SRC = (function(){ try{
-  var q = new URLSearchParams(location.search), v = (q.get('via') || '').replace(/[^a-z0-9-]/g, '').slice(0, 20) || (q.get('a') ? 'aff' : '');
+  var q = new URLSearchParams(location.search), v = (q.get('via') || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 20) || (q.get('a') ? 'aff' : '');
   if(v){ localStorage.setItem('sss.src', JSON.stringify({v: v, t: Date.now()})); return v; }
   var o = JSON.parse(localStorage.getItem('sss.src') || 'null');
   return (o && Date.now() - o.t < 60 * 864e5) ? o.v : '';
@@ -712,22 +822,58 @@ function trackOnce(name){ if(ONCE[name]) return; ONCE[name] = 1; track(name); }
 /* ---------- state ---------- */
 function lsGet(k, d){ try{ var t = localStorage.getItem(k); return t ? JSON.parse(t) : d; }catch(e){ return d; } }
 function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+/* Deep clean of anything loaded (localStorage or a show file): wrong types are coerced or dropped, ids must be short
+   lowercase letters/digits (they go into HTML attributes), so a crafted file can't break the page or inject script. */
+var IDRE = /^[a-z0-9]{1,16}$/;
+function num(x, d){ x = +x; return isFinite(x) ? x : d; }
+function moneyArr(a){ if(!Array.isArray(a)) return null; var o = a.map(function(x){ return x == null || x === '' ? null : Math.max(0, Math.round(num(x, 0))); }); return o.length ? o.slice(0, 6) : null; }
 function clean(o){
   var b = C.blankShow(), d = C.blankShow().show;
   if(!o || typeof o !== 'object' || !o.show || typeof o.show !== 'object') return b;
-  var S = {v: 1, show: Object.assign(b.show, o.show), sections: arr(o.sections), classes: arr(o.classes), exhibitors: arr(o.exhibitors),
-           entries: obj(o.entries), results: obj(o.results), trophies: arr(o.trophies), seq: +o.seq || 1, example: !!o.example};
-  if(!Array.isArray(S.show.places) || !S.show.places.length) S.show.places = d.places;
-  S.show.places = S.show.places.slice(0, 4).map(function(p, i){ p = p || {}; return {label: String(p.label || d.places[i].label), money: +p.money || 0, pts: +p.pts || 0, off: !!p.off}; });
-  ['fee', 'juniorFee', 'firstNo'].forEach(function(k){ if(!isFinite(+S.show[k])) S.show[k] = d[k]; S.show[k] = +S.show[k]; });
-  ['nonMemberFee', 'feeCap'].forEach(function(k){ S.show[k] = S.show[k] == null || !isFinite(+S.show[k]) ? null : +S.show[k]; });
-  if(!C.CUR[S.show.cur]) S.show.cur = 'GBP';
-  S.show.name = String(S.show.name || ''); S.show.date = String(S.show.date || '');
-  S.classes = S.classes.filter(function(c){ return c && c.id && c.code != null; }).map(function(c){ c.code = String(c.code); c.title = String(c.title || ''); return c; });
-  S.exhibitors = S.exhibitors.filter(function(e){ return e && e.id && isFinite(+e.no); }).map(function(e){ e.no = +e.no; e.name = String(e.name || ''); return e; });
-  S.sections = S.sections.filter(function(s){ return s && s.id; });
-  S.trophies = S.trophies.filter(function(t){ return t && t.id; });
-  for(var k in S.entries) if(!Array.isArray(S.entries[k])) delete S.entries[k];
+  var sh = o.show, S = b;
+  S.show.name = String(sh.name || '').slice(0, 120); S.show.date = /^\d{4}-\d\d-\d\d$/.test(sh.date || '') ? sh.date : '';
+  S.show.cur = C.CUR[sh.cur] ? sh.cur : 'GBP';
+  ['fee', 'juniorFee'].forEach(function(k){ S.show[k] = Math.max(0, Math.round(num(sh[k], d[k]))); });
+  S.show.firstNo = Math.max(1, Math.round(num(sh.firstNo, 1)));
+  ['nonMemberFee', 'feeCap', 'maxNote'].forEach(function(k){ S.show[k] = sh[k] == null || sh[k] === '' || !isFinite(+sh[k]) ? null : Math.max(0, Math.round(+sh[k])); });
+  S.show.paper = sh.paper === 'Letter' ? 'Letter' : 'A4';
+  S.show.equal = ['pool', 'full', 'split'].indexOf(sh.equal) >= 0 ? sh.equal : (o.v >= 2 ? 'pool' : 'split');
+  var pl = Array.isArray(sh.places) ? sh.places : [];
+  S.show.places = d.places.map(function(def, i){ var p = pl[i] && typeof pl[i] === 'object' ? pl[i] : null; return p ? {label: String(p.label || def.label).slice(0, 12), money: Math.max(0, Math.round(num(p.money, 0))), pts: Math.max(0, Math.round(num(p.pts, 0))), off: i > 0 && !!p.off} : def; });
+  S.sections = arr(o.sections).filter(function(x){ return x && IDRE.test(x.id); }).map(function(x){ return {id: x.id, code: String(x.code || '').slice(0, 4), name: String(x.name || 'Section').slice(0, 80), money: moneyArr(x.money)}; });
+  var secOk = {}; S.sections.forEach(function(x){ secOk[x.id] = 1; });
+  var codes = {};
+  S.classes = arr(o.classes).filter(function(c){ return c && IDRE.test(c.id) && c.code != null && String(c.code).trim(); }).map(function(c){
+    return {id: c.id, code: String(c.code).trim().slice(0, 8), title: String(c.title || '').slice(0, 200), sec: secOk[c.sec] ? c.sec : '', money: moneyArr(c.money),
+            fee: c.fee == null || c.fee === '' || !isFinite(+c.fee) ? null : Math.max(0, Math.round(+c.fee)), junior: !!c.junior};
+  }).filter(function(c){ var k = c.code.toLowerCase(); if(codes[k]) return false; codes[k] = 1; return true; });
+  var clsOk = {}; S.classes.forEach(function(c){ clsOk[c.id] = 1; });
+  var nos = {};
+  S.exhibitors = arr(o.exhibitors).filter(function(e){ return e && IDRE.test(e.id) && num(e.no, 0) >= 1; }).map(function(e){
+    return {id: e.id, no: Math.round(+e.no), name: String(e.name || '').slice(0, 120), junior: !!e.junior, member: e.member !== false, paid: !!e.paid, donate: !!e.donate, tags: String(e.tags || '').slice(0, 80)};
+  }).filter(function(e){ if(nos[e.no]) return false; nos[e.no] = 1; return true; });
+  var exOk = {}; S.exhibitors.forEach(function(e){ exOk[e.id] = 1; });
+  var en = obj(o.entries); for(var k in en) if(exOk[k] && Array.isArray(en[k])) S.entries[k] = en[k].filter(function(c){ return clsOk[c]; });
+  var rs = obj(o.results); for(var k2 in rs){
+    var r = rs[k2]; if(!clsOk[k2] || !r || typeof r !== 'object') continue;
+    S.results[k2] = {none: !!r.none, p: (Array.isArray(r.p) ? r.p : []).slice(0, 6).map(function(v){
+      if(Array.isArray(v)){ var a = v.map(function(x){ return Math.round(num(x, 0)); }).filter(function(x){ return x > 0; }); return a.length > 1 ? a : a.length ? a[0] : ''; }
+      var n = Math.round(num(v, 0)); return n > 0 ? n : '';
+    })};
+  }
+  S.trophies = arr(o.trophies).filter(function(t){ return t && IDRE.test(t.id); }).map(function(t){
+    var kind = ['points', 'money', 'class'].indexOf(t.kind) >= 0 ? t.kind : (t.kind === 'pick' ? 'class' : 'points');
+    var noNames = String(t.noNames || '');
+    if(Array.isArray(t.exclude)) t.exclude.forEach(function(id){ var e = arr(o.exhibitors).filter(function(x){ return x && x.id === id; })[0]; if(e && e.name) noNames += (noNames ? ', ' : '') + String(e.name); });
+    return {id: t.id, name: String(t.name || 'Cup').slice(0, 80), kind: kind, sections: arr(t.sections).filter(function(x){ return secOk[x]; }), classes: String(t.classes || '').slice(0, 200),
+            tie: t.tie === 'share' ? 'share' : 'firsts', cls: clsOk[t.cls] ? t.cls : '', judgePick: !!t.judgePick || t.kind === 'pick', note: String(t.note || t.pickNote || '').slice(0, 80),
+            junior: !!t.junior, members: !!t.members, group: String(t.group || '').slice(0, 40), noNames: noNames.slice(0, 400), noRepeat: Math.max(0, Math.min(5, Math.round(num(t.noRepeat, 0)))),
+            history: arr(t.history).filter(function(h){ return h && num(h.year, 0) > 1900; }).slice(-10).map(function(h){ return {year: Math.round(+h.year), names: arr(h.names).map(function(n){ return String(n).slice(0, 120); }).slice(0, 6)}; })};
+  });
+  S.retired = arr(o.retired).map(function(x){ return Math.round(num(x, 0)); }).filter(function(x){ return x > 0; });
+  S.seq = Math.max(1, Math.round(num(o.seq, 1))); S.example = !!o.example;
+  var maxSeq = 1; [S.sections, S.classes, S.exhibitors, S.trophies].forEach(function(l){ l.forEach(function(x){ var n = parseInt(x.id.slice(1), 36); if(n > maxSeq) maxSeq = n; }); });
+  if(S.seq < maxSeq) S.seq = maxSeq;
   return S;
 }
 function arr(x){ return Array.isArray(x) ? x : []; }
@@ -738,6 +884,7 @@ var PRO = lsGet(PROKEY, null);
 var TAB = 'schedule';
 var saveFailed = false;
 function save(){
+  changes++;
   if(!lsSet(KEY, S) && !saveFailed){ saveFailed = true; say('This browser is not saving. Use "Save show file" on step 5 to keep your work.'); }
 }
 function isPro(){ return !!(PRO && (PRO.email || PRO.gift)); }
@@ -753,13 +900,8 @@ function sortedClasses(){
   var order = {}; S.sections.forEach(function(s, i){ order[s.id] = i; });
   return S.classes.slice().sort(function(a, b){ return ((order[a.sec] == null ? 999 : order[a.sec]) - (order[b.sec] == null ? 999 : order[b.sec])) || C.sortCodes(a.code, b.code); });
 }
-function moneyList(a){ return (a || []).map(function(m){ return m == null ? '' : (m / 100).toFixed(2).replace(/\.00$/, ''); }).join(', '); }
-function parseMoneyList(t){
-  t = String(t || '').trim(); if(!t) return null;
-  var out = [], ok = true;
-  t.split(/[,;/\s]+/).filter(Boolean).forEach(function(x){ var m = C.parseMoney(x); if(m == null || isNaN(m)) ok = false; else out.push(m); });
-  return ok ? out : NaN;
-}
+function moneyList(a){ return (a || []).map(function(m){ return m == null ? '' : (m / 100).toFixed(2).replace(/\.00$/, ''); }).join(S.show.cur === 'EUR' ? '; ' : ', '); }
+function parseMoneyList(t){ return C.parseMoneyList(t, S.show.cur); }
 
 /* ---------- tabs ---------- */
 function showTab(t){
@@ -781,7 +923,8 @@ function renderTop(){
   var o = C.compute(S), n = C.entryCount(S);
   $('showLine').textContent = S.show.name ? S.show.name + (S.show.date ? ' · ' + niceDate(S.show.date) : '') : 'Entries, exhibit cards, prize money and cups for your show';
   $('tally').innerHTML = '<span><b>' + S.classes.length + '</b> classes</span><span><b>' + S.exhibitors.length + '</b> exhibitors</span><span><b>' + n + '</b> entries</span>' +
-    '<span>fees <b>' + money(o.totalFees) + '</b></span>' + (o.awards.length ? '<span>prizes <b>' + money(o.totalPrize) + '</b></span>' : '');
+    '<span>fees <b>' + money(o.totalFees) + '</b></span>' + (o.awards.length ? '<span>prizes <b>' + money(o.totalPrize) + '</b></span>' : '') +
+    ((S.exhibitors.length || S.classes.length) && !S.example ? '<span title="Saved in this browser. Save a file to keep a copy.">' + (lastFile ? 'file saved ' + new Date(lastFile).toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) : 'no file saved yet') + '</span>' : '');
   $('exampleBar').hidden = !S.example;
   if(n >= 10 && !S.example) trackOnce('ten-entries');
 }
@@ -797,6 +940,7 @@ function renderSchedule(){
   if(empty) $('miniCard').innerHTML = cardHTML({show: 'Little Wapping Summer Show', code: '12', title: 'Vase of sweet peas, 9 stems', no: 37, name: 'Mrs J. Smith', showName: true});
   $('sName').value = S.show.name; $('sDate').value = S.show.date; $('sCur').value = S.show.cur;
   $('sFee').value = (S.show.fee / 100).toFixed(2); $('sJFee').value = (S.show.juniorFee / 100).toFixed(2); $('sFirst').value = S.show.firstNo;
+  $('sPaper').value = S.show.paper; $('sEqual').value = S.show.equal;
   $('sNFee').value = S.show.nonMemberFee == null ? '' : (S.show.nonMemberFee / 100).toFixed(2); $('sCap').value = S.show.feeCap == null ? '' : (S.show.feeCap / 100).toFixed(2);
   $('placesBody').innerHTML = S.show.places.map(function(p, i){
     return '<tr><td><input type="text" data-pl="label" data-i="' + i + '" value="' + esc(p.label) + '" style="width:80px"></td>' +
@@ -819,22 +963,25 @@ function renderSchedule(){
   $('classBody').innerHTML = html;
   $('noClasses').hidden = !!S.classes.length;
   $('classHead').textContent = S.classes.length ? S.classes.length + ' classes in ' + S.sections.length + ' section' + (S.sections.length === 1 ? '' : 's') : 'Classes';
-  $('secMoney').innerHTML = S.sections.length ? '<h3>Prize money by section</h3><div class="row">' + S.sections.map(function(s){
-    return '<label class="f">' + esc(s.name) + '<input type="text" data-sm="' + s.id + '" placeholder="usual" value="' + esc(moneyList(s.money)) + '" style="width:150px"></label>';
-  }).join('') + '</div><p style="font-size:15px">Leave blank to use the usual amounts. Type e.g. <b>3, 2, 1</b> for £3 / £2 / £1.</p>' : '';
+  $('secMoney').innerHTML = S.sections.length ? '<h3>Sections and their prize money</h3><div class="scroll"><table class="tbl" style="max-width:640px"><thead><tr><th>Section</th><th>Prize money <small>(blank = usual)</small></th><th></th></tr></thead><tbody>' + S.sections.map(function(s){
+    var used = S.classes.some(function(c){ return c.sec === s.id; });
+    return '<tr><td><input type="text" data-sn="' + esc(s.id) + '" value="' + esc(s.name) + '" aria-label="Section name"></td><td><input type="text" data-sm="' + esc(s.id) + '" placeholder="usual" value="' + esc(moneyList(s.money)) + '" style="width:150px" aria-label="Prize money for ' + esc(s.name) + '"></td>' +
+      '<td>' + (used ? '' : '<button class="del" data-sdel="' + esc(s.id) + '" aria-label="Delete empty section">×</button>') + '</td></tr>';
+  }).join('') + '</tbody></table></div><p style="font-size:15px">Type e.g. <b>3, 2, 1</b> for ' + money(300) + ' / ' + money(200) + ' / ' + money(100) + '. A section can be deleted once it has no classes.</p>' : '';
 }
 function onShowField(){
   var f = C.parseMoney($('sFee').value), j = C.parseMoney($('sJFee').value), first = parseInt($('sFirst').value, 10);
   S.show.name = $('sName').value.trim(); S.show.date = $('sDate').value; S.show.cur = $('sCur').value;
-  if(f != null && !isNaN(f)) S.show.fee = f;
+  if(f != null && !isNaN(f)) S.show.fee = f; else if(f !== null || $('sFee').value.trim()) say('Entry fee: type an amount like 0.50');
   if(j != null && !isNaN(j)) S.show.juniorFee = j;
   if(first > 0) S.show.firstNo = first;
   var nf = C.parseMoney($('sNFee').value), cap = C.parseMoney($('sCap').value);
   if(!(nf != null && isNaN(nf))) S.show.nonMemberFee = nf;
   if(!(cap != null && isNaN(cap))) S.show.feeCap = cap;
+  S.show.paper = $('sPaper').value; S.show.equal = $('sEqual').value;
   touched(); save(); renderTop();
 }
-['sName','sDate','sCur','sFee','sJFee','sFirst','sNFee','sCap'].forEach(function(id){ $(id).addEventListener('change', onShowField); });
+['sName','sDate','sCur','sFee','sJFee','sFirst','sNFee','sCap','sPaper','sEqual'].forEach(function(id){ $(id).addEventListener('change', onShowField); });
 $('placesBody').addEventListener('change', function(e){
   var t = e.target, i = +t.getAttribute('data-i'), k = t.getAttribute('data-pl'), p = S.show.places[i]; if(!p) return;
   if(k === 'label') p.label = t.value.trim() || p.label;
@@ -849,8 +996,13 @@ $('readSched').addEventListener('click', function(){
   if(S.example){ S = C.blankShow(); }
   var r = C.applySchedule(S, p);
   touched(); track('schedule-read'); save();
-  $('readMsg').innerHTML = '<span class="ok">Added ' + r.added + ' classes in ' + p.sections.length + ' section' + (p.sections.length === 1 ? '' : 's') + '.</span>' +
-    (r.dup ? ' ' + r.dup + ' already there.' : '') + (p.skipped.length ? ' Skipped ' + p.skipped.length + ' line' + (p.skipped.length === 1 ? '' : 's') + ' that were not classes (rules, prizes, headings).' : '');
+  var twice = p.skipped.filter(function(l){ return /used twice/.test(l); });
+  $('readMsg').innerHTML = '<span class="ok">Added ' + r.added + ' classes in ' + p.sections.length + ' section' + (p.sections.length === 1 ? '' : 's') + '.</span> Check the list below.' +
+    (r.dup ? '<br>' + r.dup + ' class number' + (r.dup === 1 ? ' was' : 's were') + ' already there and left as they were.' : '') +
+    (p.renamed.length ? '<br>These numbers repeat in a later section, so they got the section letter: ' + esc(p.renamed.map(function(x){ return x.from + ' → ' + x.to; }).join(', ')) + '. Change them in the list if your schedule uses other numbers.' : '') +
+    (twice.length ? '<br><span class="err">Left out (number used twice): ' + esc(twice.join('; ')) + '</span>' : '') +
+    (r.junior.length ? '<br>Marked junior: ' + esc(r.junior.join(', ')) + '.' : '') +
+    (p.skipped.length - twice.length > 0 ? '<details><summary>' + (p.skipped.length - twice.length) + ' lines were not classes (rules, prizes, headings)</summary><div style="font-size:14px">' + p.skipped.filter(function(l){ return !/used twice/.test(l); }).map(esc).join('<br>') + '</div></details>' : '');
   $('pasteBox').value = '';
   renderSchedule(); renderTop();
 });
@@ -876,9 +1028,16 @@ $('classBody').addEventListener('click', function(e){
   save(); renderSchedule(); renderTop();
 });
 $('secMoney').addEventListener('change', function(e){
-  var id = e.target.getAttribute('data-sm'), s = S.sections.filter(function(x){ return x.id === id; })[0]; if(!s) return;
-  var m = parseMoneyList(e.target.value); if(typeof m === 'number' && isNaN(m)){ say('Type amounts like 3, 2, 1'); return; }
+  var t = e.target, sn = t.getAttribute('data-sn'), id = t.getAttribute('data-sm') || sn, s = S.sections.filter(function(x){ return x.id === id; })[0]; if(!s) return;
+  if(sn){ var v = t.value.trim(); if(v) s.name = v; else t.value = s.name; touched(); save(); return; }
+  var m = parseMoneyList(t.value); if(typeof m === 'number' && isNaN(m)){ say('Type amounts like 3, 2, 1'); return; }
   s.money = m; touched(); save(); renderTop();
+});
+$('secMoney').addEventListener('click', function(e){
+  var id = e.target.getAttribute && e.target.getAttribute('data-sdel'); if(!id) return;
+  S.sections = S.sections.filter(function(x){ return x.id !== id; });
+  S.trophies.forEach(function(t){ t.sections = (t.sections || []).filter(function(x){ return x !== id; }); });
+  save(); renderSchedule();
 });
 $('addClass').addEventListener('click', function(){
   if(S.example) S = C.blankShow();
@@ -897,6 +1056,8 @@ function hintFor(text){
   var map = {}; S.classes.forEach(function(c){ map[c.code.toLowerCase()] = c; });
   var h = r.codes.map(function(c){ var k = map[c.toLowerCase()]; return '<b>' + esc(c) + '</b> ' + esc(k.title); }).join(' · ');
   if(r.bad.length) h += (h ? '<br>' : '') + '<span class="err">Not in the schedule: ' + esc(r.bad.join(', ')) + '</span>';
+  var jn = juniorNote(r.codes, $('eJun').checked); if(jn) h += '<br>' + esc(jn.trim());
+  var same = C.findByName(S, $('eName').value)[0]; if(same) h += '<br><b>' + esc(same.name) + ' is already exhibitor ' + same.no + '.</b>';
   return h;
 }
 $('eCls').addEventListener('input', function(){ $('eHint').innerHTML = S.classes.length ? hintFor(this.value) : '<span class="err">Add the classes on step 1 first.</span>'; });
@@ -906,34 +1067,55 @@ function addExhibitor(name, text, junior){
   var r = C.setEntries(S, e.id, text);
   return {e: e, r: r};
 }
+/* Add classes to someone already on the list (same name came in twice: email, then post). */
+function mergeInto(e, text){
+  var before = C.entriesText(S, e.id), r = C.setEntries(S, e.id, before + ', ' + text);
+  return r;
+}
+function juniorNote(codes, junior){
+  var map = {}; S.classes.forEach(function(c){ map[c.code.toLowerCase()] = c; });
+  var j = codes.filter(function(c){ var k = map[c.toLowerCase()]; return k && k.junior; });
+  return j.length && !junior ? ' Note: ' + j.join(', ') + (j.length === 1 ? ' is a junior class' : ' are junior classes') + '; tick Junior if this is a child.' : '';
+}
 $('eAdd').addEventListener('click', function(){
   var name = $('eName').value.trim(), text = $('eCls').value;
   if(!S.classes.length){ say('Add the classes on step 1 first.'); return; }
   if(!name){ say('Type the exhibitor\'s name.'); $('eName').focus(); return; }
   if(S.example){ say('This is the example show. Click "Start my own show" first.'); return; }
   var r = C.parseList(text, S.classes.map(function(c){ return c.code; }));
+  if(!r.codes.length){ say(r.bad.length ? 'Not in the schedule: ' + r.bad.join(', ') + '. Nothing added.' : 'Type the classes, like 1, 4, 12-14.'); $('eCls').focus(); return; }
   if(r.bad.length && !confirm('Not in the schedule: ' + r.bad.join(', ') + '. Add the rest?')) return;
-  var x = addExhibitor(name, text, $('eJun').checked);
+  var same = C.findByName(S, name)[0], msg;
+  if(same && confirm(name + ' is already exhibitor ' + same.no + ' (' + C.entriesText(S, same.id) + '). Add these classes to number ' + same.no + '?\n\nOK = same person. Cancel = a different person with the same name.')){
+    var m = mergeInto(same, text); msg = same.name + ' (' + same.no + ') now has ' + m.codes.length + ' entries.';
+  } else {
+    var x = addExhibitor(name, text, $('eJun').checked); msg = name + ' is exhibitor ' + x.e.no + ' with ' + x.r.codes.length + ' entr' + (x.r.codes.length === 1 ? 'y' : 'ies') + '.';
+  }
   touched(); trackOnce('exhibitor-added'); save();
+  say(msg + juniorNote(r.codes, $('eJun').checked));
   $('eName').value = ''; $('eCls').value = ''; $('eJun').checked = false; $('eHint').innerHTML = '';
-  say(name + ' is exhibitor ' + x.e.no + ' with ' + x.r.codes.length + ' entr' + (x.r.codes.length === 1 ? 'y' : 'ies') + '.');
   renderEntries(); renderTop(); $('eName').focus();
 });
 $('eCls').addEventListener('keydown', function(e){ if(e.key === 'Enter') $('eAdd').click(); });
 $('eName').addEventListener('keydown', function(e){ if(e.key === 'Enter') $('eCls').focus(); });
+/* Paste many: "Name: classes" or two columns pasted from Excel (name <tab> classes). Lines added are taken out of the
+   box; only lines with a problem stay, so pressing "Add all" again never adds anyone twice. Same name = same person. */
 $('bulkAdd').addEventListener('click', function(){
   if(S.example){ say('This is the example show. Click "Start my own show" first.'); return; }
   if(!S.classes.length){ say('Add the classes on step 1 first.'); return; }
-  var lines = $('bulkBox').value.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(Boolean), added = 0, problems = [];
+  var lines = $('bulkBox').value.split(/\r?\n/).filter(function(l){ return l.trim(); }), added = 0, merged = 0, keep = [], problems = [];
+  var known = S.classes.map(function(c){ return c.code; });
   lines.forEach(function(l){
-    var m = /^(.+?)\s*[:\t]\s*(.*)$/.exec(l);
-    if(!m){ problems.push(l); return; }
-    var x = addExhibitor(m[1].trim(), m[2]); added++;
-    if(x.r.bad.length) problems.push(m[1] + ': not in schedule ' + x.r.bad.join(', '));
+    var m = /^(.+?)\s*(?::|\t)\s*(.*)$/.exec(l.trim());
+    if(!m){ keep.push(l); problems.push('"' + l.trim() + '": no colon between name and classes'); return; }
+    var name = m[1].replace(/^"|"$/g, '').trim(), r = C.parseList(m[2], known);
+    if(!r.codes.length || r.bad.length){ keep.push(l); problems.push(name + ': ' + (r.bad.length ? 'not in schedule ' + r.bad.join(', ') : 'no classes')); return; }
+    var same = C.findByName(S, name)[0];
+    if(same){ mergeInto(same, m[2]); merged++; } else { addExhibitor(name, m[2]); added++; }
   });
-  if(added){ touched(); trackOnce('exhibitor-added'); save(); }
-  $('bulkMsg').innerHTML = '<span class="ok">Added ' + added + '.</span>' + (problems.length ? ' <span class="err">Check: ' + esc(problems.join('; ')) + '</span>' : '');
-  if(!problems.length) $('bulkBox').value = '';
+  if(added || merged){ touched(); trackOnce('exhibitor-added'); save(); }
+  $('bulkBox').value = keep.join('\n');
+  $('bulkMsg').innerHTML = '<span class="ok">Added ' + added + (merged ? ', added classes to ' + merged + ' already on the list' : '') + '.</span>' + (problems.length ? ' <span class="err">Still in the box, fix and press again: ' + esc(problems.join('; ')) + '</span>' : '');
   renderEntries(); renderTop();
 });
 function renderEntries(){
@@ -981,8 +1163,10 @@ $('exBody').addEventListener('change', function(e){
 $('exBody').addEventListener('click', function(e){
   var id = e.target.getAttribute && e.target.getAttribute('data-edel'); if(!id) return;
   var x = S.exhibitors.filter(function(y){ return y.id === id; })[0]; if(!x) return;
-  if(!confirm('Delete exhibitor ' + x.no + ' (' + x.name + ') and their entries?')) return;
+  var placed = C.compute(S).per[x.id].wins.map(function(a){ return a.cls.code; });
+  if(!confirm('Delete exhibitor ' + x.no + ' (' + x.name + ') and their entries?' + (placed.length ? '\n\nThey are placed in class ' + placed.join(', ') + '. Those placings will show as "not on the list". Number ' + x.no + ' will not be given to anyone else.' : ''))) return;
   S.exhibitors = S.exhibitors.filter(function(y){ return y.id !== id; }); delete S.entries[id];
+  S.retired = (S.retired || []).concat([x.no]);
   save(); renderEntries(); renderTop();
 });
 function hasResults(){ for(var k in S.results){ var r = S.results[k]; if(r && r.p && r.p.some(function(v){ return C.placeNos(v).length; })) return true; } return false; }
@@ -1015,7 +1199,7 @@ function renderCards(){
                                      : cardHTML({show: S.show.name || 'Your show', code: '12', title: 'Vase of sweet peas', no: 37, name: 'Exhibitor', showName: false});
   $('cardCount').innerHTML = l.length ? '<b>' + l.length + '</b> cards on <b>' + Math.ceil(l.length / 8) + '</b> page' + (Math.ceil(l.length / 8) === 1 ? '' : 's') + '.' : 'Add exhibitors on step 2 first.';
 }
-['cOrder','cName','cPaper'].forEach(function(id){ $(id).addEventListener('change', renderCards); });
+['cOrder','cName'].forEach(function(id){ $(id).addEventListener('change', renderCards); });
 function gate(what){
   if(!overFree()) return true;
   track('pro-limit');
@@ -1035,14 +1219,14 @@ function doPrint(html, paper, ev){
 $('pCards').addEventListener('click', function(){
   var l = cardList(); if(!l.length){ say('No entries yet.'); return; }
   if(!gate('Printing cards')) return;
-  var paper = $('cPaper').value, ch = paper === 'Letter' ? '2.55in' : '69mm', name = $('cName').checked, html = '';
+  var paper = S.show.paper, ch = paper === 'Letter' ? '2.45in' : '66mm', name = $('cName').checked, html = '';
   for(var i = 0; i < l.length; i += 8){
     html += '<div class="cards' + (i + 8 < l.length ? ' pbreak' : '') + '" style="--ch:' + ch + '">' + l.slice(i, i + 8).map(function(x){
       return cardHTML({show: S.show.name, code: x.c.code, title: x.c.title, no: x.e.no, name: x.e.name, showName: name});
     }).join('') + '</div>';
   }
   if(!S.example && l.length >= 10) track('real-cards');
-  doPrint(html + stamp(), paper, 'print-cards');
+  doPrint(html, paper, 'print-cards');
 });
 $('pReceipts').addEventListener('click', function(){
   if(!S.exhibitors.length){ say('No exhibitors yet.'); return; }
@@ -1054,7 +1238,7 @@ $('pReceipts').addEventListener('click', function(){
     return '<div class="slip"><b>' + esc(S.show.name || 'Show') + '</b><br>Exhibitor <span class="amt">' + e.no + '</span> ' + esc(e.name) + '<br>' + lines +
       '<br><b>' + p.entries + ' entries · fee ' + money(p.fee) + (e.paid ? ' · paid' : ' · to pay') + '</b></div>';
   }).join('') + '</div>';
-  doPrint(html + stamp(), $('cPaper').value, 'print-receipts');
+  doPrint(html + stamp(), S.show.paper, 'print-receipts');
 });
 $('pSheets').addEventListener('click', function(){
   if(!S.classes.length){ say('No classes yet.'); return; }
@@ -1068,7 +1252,7 @@ $('pSheets').addEventListener('click', function(){
     html += '<tr><td><b>' + esc(c.code) + '</b></td><td>' + esc(c.title) + '</td><td>' + (nos.length ? nos.join(', ') + ' (' + nos.length + ')' : 'no entries') + '</td>' + on.map(function(){ return '<td></td>'; }).join('') + '</tr>';
   });
   html += '</tbody></table></div>';
-  doPrint(html + stamp(), $('cPaper').value, 'print-sheets');
+  doPrint(html + stamp(), S.show.paper, 'print-sheets');
 });
 
 /* ---------- 4 results ---------- */
@@ -1136,46 +1320,59 @@ function renderPrizes(){
   flush('cupList');
   var o = C.compute(S), locked = overFree();
   $('payTotal').textContent = money(o.payout); $('payEnv').textContent = o.envelopes.length; $('payDon').textContent = money(o.donated); $('payMax').textContent = money(o.maxPrize);
-  var fl = C.floatFor(o.envelopes.map(function(q){ return q.prize; }), cur()), keys = Object.keys(fl.counts).map(Number).sort(function(a, b){ return b - a; });
+  var den = C.cur(cur()).den, mx = $('maxNote');
+  mx.innerHTML = '<option value="">any</option>' + den.filter(function(d){ return d >= 100; }).map(function(d){ return '<option value="' + d + '"' + (S.show.maxNote === d ? ' selected' : '') + '>' + money(d) + '</option>'; }).join('');
+  var fl = C.floatFor(o.envelopes.map(function(q){ return q.prize; }), cur(), S.show.maxNote), keys = Object.keys(fl.counts).map(Number).sort(function(a, b){ return b - a; });
   $('coinList').innerHTML = locked ? '<span>Pro shows the coins for a show this size</span>' : keys.length ? keys.map(function(d){ return '<span><b>' + fl.counts[d] + '</b> × ' + money(d) + '</span>'; }).join('') + (fl.rest ? '<span class="err">' + money(fl.rest) + ' can\'t be made in coins</span>' : '') : '<span>Nothing yet: type placings on step 4.</span>';
-  // cups
   $('noCups').hidden = !!S.trophies.length;
   $('cupList').innerHTML = o.trophies.map(function(r){ return cupHTML(r, locked); }).join('');
   renderResText(o, locked);
   renderPro();
 }
-var KIND = {points: 'Most points', money: 'Most prize money', 'class': 'Winner of one class', pick: 'Judges\' choice (pick the winner)'};
+$('maxNote').addEventListener('change', function(){ S.show.maxNote = this.value ? +this.value : null; save(); renderPrizes(); });
+var KIND = {points: 'Most points', money: 'Most prize money', 'class': '1st prize in one class (fixed, or the judge\'s pick)'};
+function cupWinText(r){
+  if(!r.winners.length) return '';
+  var names = r.winners.map(function(e){ return e.name + ' (' + e.no + ')'; });
+  return r.undecided ? 'Tie: ' + names.join(' and ') : names.join(' & ');
+}
 function cupHTML(r, locked){
   var t = r.t, win;
   if(locked) win = '<div class="win">—</div><div class="why">Pro works out the winners for a show this size.</div>';
   else if(r.winners.length){
-    win = '<div class="win">' + r.winners.map(function(e){ return esc(e.name) + ' (' + e.no + ')'; }).join(' &amp; ') + '</div>';
-    var unit = t.kind === 'money' ? money : function(x){ return (Math.round(x * 100) / 100) + ' pts'; };
-    if(r.table.length) win += '<div class="why">' + unit(r.table[0].score) + (r.tie ? (r.tieBroken ? ' · tie broken on most ' + esc(S.show.places[0].label) + ' places' : (t.tie === 'share' ? ' · shared' : ' · <span class="err">still tied after counting 1sts, 2nds, 3rds: the committee decides</span>')) : '') + '</div>';
+    win = '<div class="win">' + esc(cupWinText(r)) + '</div>';
+    var unit = t.kind === 'money' ? money : function(x){ return C.fmtPts(x) + ' pts'; };
+    var why = r.table.length ? unit(r.table[0].score) : (t.kind === 'class' ? '1st in class ' + esc(clsCode(t.cls)) + (t.note ? ', ' + esc(t.note) : '') : '');
+    if(r.tie) why += r.tieBroken ? ' · tie broken on most ' + esc(S.show.places[0].label) + ' places' : (t.tie === 'share' ? ' · shared' : ' · <span class="err">still tied after counting places: the committee decides</span>');
+    win += '<div class="why">' + why + '</div>';
   } else win = '<div class="win">—</div><div class="why">' + esc(r.note || 'No winner yet.') + '</div>';
+  if(r.bad && r.bad.length && r.winners.length) win += '<div class="why err">Not classes in this schedule: ' + esc(r.bad.join(', ')) + '</div>';
   var table = (!locked && r.table.length) ? '<details><summary>Full table</summary><table class="tbl">' + r.table.slice(0, 15).map(function(x){
-    return '<tr><td>' + x.ex.no + '</td><td>' + esc(x.ex.name) + '</td><td class="n">' + (t.kind === 'money' ? money(x.score) : x.score) + '</td><td>' + x.places.map(function(n, i){ return n ? n + '×' + esc(S.show.places[i].label) : ''; }).filter(Boolean).join(' ') + '</td></tr>';
+    return '<tr><td>' + x.ex.no + '</td><td>' + esc(x.ex.name) + '</td><td class="n">' + (t.kind === 'money' ? money(x.score) : C.fmtPts(x.score)) + '</td><td>' + x.places.map(function(n, i){ return n ? n + '×' + esc(S.show.places[i].label) : ''; }).filter(Boolean).join(' ') + '</td></tr>';
   }).join('') + '</table></details>' : '';
-  var secChips = S.sections.map(function(s){ return '<label><input type="checkbox" data-tsec="' + s.id + '"' + ((t.sections || []).indexOf(s.id) >= 0 ? ' checked' : '') + '>' + esc(s.name) + '</label>'; }).join('');
-  var clsOpts = sortedClasses().map(function(c){ return '<option value="' + c.id + '"' + (t.cls === c.id ? ' selected' : '') + '>' + esc(c.code + ' ' + c.title) + '</option>'; }).join('');
-  var exOpts = '<option value="">(pick)</option>' + S.exhibitors.slice().sort(function(a, b){ return a.no - b.no; }).map(function(e){ return '<option value="' + e.id + '"' + (t.pick === e.id ? ' selected' : '') + '>' + e.no + ' ' + esc(e.name) + '</option>'; }).join('');
+  var secChips = S.sections.map(function(s){ return '<label><input type="checkbox" data-tsec="' + esc(s.id) + '"' + ((t.sections || []).indexOf(s.id) >= 0 ? ' checked' : '') + '>' + esc(s.name) + '</label>'; }).join('');
+  var clsOpts = sortedClasses().map(function(c){ return '<option value="' + esc(c.id) + '"' + (t.cls === c.id ? ' selected' : '') + '>' + esc(c.code + ' ' + c.title) + '</option>'; }).join('');
+  var hist = (t.history || []).slice().reverse().map(function(h){ return h.year + ': ' + esc(h.names.join(' & ')); }).join(' · ');
   var cfg = '<div class="cfg">' +
     '<label class="f">How it is won<select data-tf="kind">' + Object.keys(KIND).map(function(k){ return '<option value="' + k + '"' + (t.kind === k ? ' selected' : '') + '>' + KIND[k] + '</option>'; }).join('') + '</select></label>' +
-    (t.kind === 'points' || t.kind === 'money' ? '<div><b style="font-size:15px">Counting</b> <small>(none ticked = whole show)</small><div class="chips">' + secChips + '</div></div>' +
-      '<label class="f">…or these classes <small>e.g. 1-12, 20</small><input type="text" data-tf="classes" value="' + esc(t.classes || '') + '"></label>' +
-      '<label class="f">If tied<select data-tf="tie"><option value="firsts"' + (t.tie !== 'share' ? ' selected' : '') + '>Most 1sts, then 2nds, then 3rds</option><option value="share"' + (t.tie === 'share' ? ' selected' : '') + '>Shared</option></select></label>' : '') +
-    (t.kind === 'class' ? '<label class="f">Class<select data-tf="cls"><option value="">(choose)</option>' + clsOpts + '</select></label>' : '') +
-    (t.kind === 'pick' ? '<label class="f">Winner<select data-tf="pick">' + exOpts + '</select></label><label class="f">For <small>(which exhibit)</small><input type="text" data-tf="pickNote" value="' + esc(t.pickNote || '') + '"></label>' : '') +
+    (t.kind !== 'class' ? '<div><b style="font-size:15px">Counting</b> <small>(none ticked = whole show)</small><div class="chips">' + secChips + '</div></div>' +
+      '<label class="f">…or these classes <small>e.g. 1-12, 20, J1-J8</small><input type="text" data-tf="classes" value="' + esc(t.classes || '') + '"></label>' +
+      '<label class="f">If tied<select data-tf="tie"><option value="firsts"' + (t.tie !== 'share' ? ' selected' : '') + '>Most 1sts, then 2nds, then 3rds</option><option value="share"' + (t.tie === 'share' ? ' selected' : '') + '>Shared</option></select></label>'
+    : '<label class="f">Class<select data-tf="cls"><option value="">(choose)</option>' + clsOpts + '</select></label>' +
+      '<div class="chips"><label><input type="checkbox" data-tf="judgePick"' + (t.judgePick ? ' checked' : '') + '>The judge picks the class on the day (cleared for next year)</label></div>' +
+      '<label class="f">Note <small>(e.g. "rose, Mrs Smith\'s Peace")</small><input type="text" data-tf="note" value="' + esc(t.note || '') + '"></label>') +
     '<div class="chips"><label><input type="checkbox" data-tf="junior"' + (t.junior ? ' checked' : '') + '>Juniors only</label><label><input type="checkbox" data-tf="members"' + (t.members ? ' checked' : '') + '>Members only</label></div>' +
     '<label class="f">Only for a group <small>(matches "Groups" on step 2, e.g. resident, novice)</small><input type="text" data-tf="group" value="' + esc(t.group || '') + '"></label>' +
-    (t.kind !== 'pick' ? '<label class="f">Can\'t win it <small>(exhibitor numbers, e.g. last year\'s winner)</small><input type="text" data-tf="exclude" value="' + esc(excludeText(t)) + '"></label>' : '') +
+    '<label class="f">Can\'t win it <small>(names, e.g. judges, committee)</small><input type="text" data-tf="noNames" value="' + esc(t.noNames || '') + '"></label>' +
+    '<label class="f">Winners can\'t win it again for<select data-tf="noRepeat">' + [0, 1, 2, 3].map(function(n){ return '<option value="' + n + '"' + ((+t.noRepeat || 0) === n ? ' selected' : '') + '>' + (n ? n + ' year' + (n > 1 ? 's' : '') : 'no limit') + '</option>'; }).join('') + '</select></label>' +
+    (hist ? '<div style="font-size:14px">Past winners: ' + hist + '</div>' : '') +
     '<button class="linkbtn" data-tdel style="align-self:flex-start;color:var(--bad)">Remove this cup</button></div>';
-  return '<div class="cup" data-t="' + t.id + '"><input type="text" data-tf="name" value="' + esc(t.name) + '" aria-label="Cup name" style="width:100%;font-weight:700">' + win + table +
+  return '<div class="cup" data-t="' + esc(t.id) + '"><input type="text" data-tf="name" value="' + esc(t.name) + '" aria-label="Cup name" style="width:100%;font-weight:700">' + win + table +
     '<details' + (t.fresh ? ' open' : '') + '><summary>Rules</summary>' + cfg + '</details></div>';
 }
-function excludeText(t){ var exs = C.byId(S.exhibitors); return (t.exclude || []).map(function(id){ return exs[id] ? exs[id].no : ''; }).filter(Boolean).join(', '); }
+function clsCode(id){ var c = S.classes.filter(function(x){ return x.id === id; })[0]; return c ? c.code : '?'; }
 $('addCup').addEventListener('click', function(){
-  if(S.example){ say('This is the example show.'); }
+  if(S.example){ say('This is the example show. Click "Start my own show" first.'); return; }
   S.trophies.forEach(function(t){ delete t.fresh; });
   S.trophies.push({id: C.nid(S, 't'), name: 'New cup', kind: 'points', sections: [], classes: '', tie: 'firsts', fresh: true});
   touched(); trackOnce('cup-added'); save(); renderPrizes();
@@ -1184,14 +1381,10 @@ $('addCup').addEventListener('click', function(){
 $('cupList').addEventListener('change', function(e){
   var t = e.target, box = t.closest('.cup'), id = box && box.getAttribute('data-t'), cup = S.trophies.filter(function(x){ return x.id === id; })[0]; if(!cup) return;
   S.trophies.forEach(function(x){ delete x.fresh; }); cup.fresh = true;
-  var k = t.getAttribute('data-tf'), s = t.getAttribute('data-tsec');
-  if(s){ cup.sections = cup.sections || []; if(t.checked){ if(cup.sections.indexOf(s) < 0) cup.sections.push(s); } else cup.sections = cup.sections.filter(function(x){ return x !== s; }); }
-  else if(k === 'junior' || k === 'members') cup[k] = t.checked;
-  else if(k === 'exclude'){
-    var nos = (t.value.match(/\d+/g) || []).map(Number), ids = [];
-    nos.forEach(function(n){ var ex = S.exhibitors.filter(function(x){ return x.no === n; })[0]; if(ex) ids.push(ex.id); else say('No exhibitor ' + n); });
-    cup.exclude = ids;
-  }
+  var k = t.getAttribute('data-tf'), sid = t.getAttribute('data-tsec');
+  if(sid){ cup.sections = cup.sections || []; if(t.checked){ if(cup.sections.indexOf(sid) < 0) cup.sections.push(sid); } else cup.sections = cup.sections.filter(function(x){ return x !== sid; }); }
+  else if(k === 'junior' || k === 'members' || k === 'judgePick') cup[k] = t.checked;
+  else if(k === 'noRepeat') cup.noRepeat = +t.value;
   else if(k) cup[k] = t.value;
   touched(); save(); renderPrizes();
 });
@@ -1205,7 +1398,11 @@ function nm(e){
   if(!e) return '';
   var st = $('nmStyle').value;
   if(st === 'no') return 'No. ' + e.no;
-  if(st === 'init'){ var w = e.name.replace(/^(mr|mrs|ms|miss|dr|rev)\.?\s+/i, '').split(/\s+/); return w.length > 1 ? w[0].charAt(0).toUpperCase() + '. ' + w.slice(1).join(' ') : e.name; }
+  if(e.junior && $('nmJun').checked) return e.name.trim().split(/\s+/)[0] + (e.no ? '' : '');
+  if(st === 'init' && !/&|\band\b/i.test(e.name)){
+    var w = e.name.replace(/^(mr|mrs|ms|miss|mx|dr|rev|revd)\.?\s+/i, '').split(/\s+/).filter(Boolean);
+    return w.length > 1 ? w[0].charAt(0).toUpperCase() + '. ' + w.slice(1).join(' ') : e.name;
+  }
   return e.name;
 }
 function resultsText(o){
@@ -1217,11 +1414,14 @@ function resultsText(o){
     lines.push(c.code + ' ' + c.title + ': ' + w.map(function(list, i){ return list ? (list.length > 1 ? 'equal ' : '') + S.show.places[i].label + ' ' + list.map(nm).join(' & ') : ''; }).filter(Boolean).join(', '));
   });
   var cups = o.trophies.filter(function(r){ return r.winners.length; });
-  if(cups.length){ lines.push(''); lines.push('CUPS AND TROPHIES'); cups.forEach(function(r){ lines.push(r.t.name + ': ' + r.winners.map(nm).join(' & ') + (r.t.kind === 'pick' && r.t.pickNote ? ' (' + r.t.pickNote + ')' : '')); }); }
+  if(cups.length){ lines.push(''); lines.push('CUPS AND TROPHIES'); cups.forEach(function(r){
+    lines.push(r.t.name + ': ' + (r.undecided ? 'tie between ' + r.winners.map(nm).join(' and ') + ', to be decided' : r.winners.map(nm).join(' & ')) + (r.t.kind === 'class' && r.t.note ? ' (' + r.t.note + ')' : ''));
+  }); }
   return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 function renderResText(o, locked){ $('resText').value = locked ? 'Pro writes up the results for a show this size.' : o.awards.length ? resultsText(o) : 'Type placings on step 4 and the results appear here.'; }
 $('nmStyle').addEventListener('change', function(){ renderResText(C.compute(S), overFree()); });
+$('nmJun').addEventListener('change', function(){ renderResText(C.compute(S), overFree()); });
 $('copyRes').addEventListener('click', function(){
   if(!gate('Results')) return;
   var t = $('resText').value;
@@ -1230,52 +1430,87 @@ $('copyRes').addEventListener('click', function(){
 });
 $('pRes').addEventListener('click', function(){
   if(!gate('Results')) return;
-  doPrint('<div class="sheet"><pre style="font:11pt/1.45 Georgia,serif;white-space:pre-wrap">' + esc(resultsText(C.compute(S))) + '</pre></div>' + stamp(), 'A4', 'print-results');
+  doPrint('<div class="sheet"><pre style="font:11pt/1.45 Georgia,serif;white-space:pre-wrap">' + esc(resultsText(C.compute(S))) + '</pre></div>' + stamp(), S.show.paper, 'print-results');
 });
 $('pEnv').addEventListener('click', function(){
   var o = C.compute(S); if(!o.envelopes.length){ say('No prize money yet. Type placings on step 4.'); return; }
   if(!gate('Envelope slips')) return;
   var html = '<div class="slips">' + o.envelopes.sort(function(a, b){ return a.ex.no - b.ex.no; }).map(function(q){
+    var wins = q.wins.filter(function(a){ return a.money > 0; }).sort(function(a, b){ return C.sortCodes(a.cls.code, b.cls.code); });
     return '<div class="slip">' + esc(S.show.name || 'Show') + ' · prize money<br>Exhibitor <b>' + q.ex.no + '</b> ' + esc(q.ex.name) + '<div class="amt">' + money(q.prize) + '</div>' +
-      q.wins.map(function(a){ return 'Class ' + esc(a.cls.code) + ' ' + (a.equal ? 'equal ' : '') + esc(S.show.places[a.place].label) + ' ' + money(a.money); }).join('<br>') + '</div>';
+      wins.map(function(a){ return 'Class ' + esc(a.cls.code) + ' ' + (a.equal ? 'equal ' : '') + esc(S.show.places[a.place].label) + ' ' + money(a.money); }).join('<br>') + '</div>';
   }).join('') + '</div>';
-  doPrint(html + stamp(), $('cPaper').value, 'print-envelopes');
+  doPrint(html + stamp(), S.show.paper, 'print-envelopes');
 });
 $('pPay').addEventListener('click', function(){
   var o = C.compute(S); if(!o.awards.length){ say('No placings yet.'); return; }
   if(!gate('Pay-out sheet')) return;
   var rows = S.exhibitors.slice().sort(function(a, b){ return a.no - b.no; }).map(function(e){ return o.per[e.id]; }).filter(function(q){ return q.prize > 0; });
-  var html = '<div class="sheet"><h2>' + esc(S.show.name || 'Show') + ' · prize money</h2><table><thead><tr><th>No.</th><th>Name</th><th>Places</th><th>Amount</th><th>Signed / donated</th></tr></thead><tbody>' +
+  var html = '<div class="sheet"><h2>' + esc(S.show.name || 'Show') + ' · prize money</h2><table><thead><tr><th>No.</th><th>Name</th><th>Places</th><th>Amount</th><th>Collected / signed</th></tr></thead><tbody>' +
     rows.map(function(q){ return '<tr><td>' + q.ex.no + '</td><td>' + esc(q.ex.name) + '</td><td>' + q.places.map(function(n, i){ return n ? n + '×' + esc(S.show.places[i].label) : ''; }).filter(Boolean).join(' ') + '</td><td>' + money(q.prize) + '</td><td>' + (q.ex.donate ? 'donated' : '') + '</td></tr>'; }).join('') +
-    '</tbody></table><p>Total ' + money(o.totalPrize) + ' · donated ' + money(o.donated) + ' · paid out ' + money(o.payout) + ' · entry fees taken ' + money(o.totalFees) + '</p></div>';
-  doPrint(html + stamp(), 'A4', 'print-payout');
+    '</tbody></table><p>Total ' + money(o.totalPrize) + ' · donated ' + money(o.donated) + ' · to pay out ' + money(o.payout) + ' · entry fees ' + money(o.totalFees) + '</p><p>Not collected by the end of the day (to show funds): ______________</p></div>';
+  doPrint(html + stamp(), S.show.paper, 'print-payout');
 });
 
 /* ---------- files ---------- */
-$('saveFile').addEventListener('click', function(){
-  var b = new Blob([JSON.stringify(S, null, 1)], {type: 'application/json'}), a = document.createElement('a');
-  a.href = URL.createObjectURL(b); a.download = (S.show.name || 'show').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase() + '-' + new Date().toISOString().slice(0, 10) + '.json';
+var lastFile = (function(){ try{ return +localStorage.getItem('sss.saved') || 0; }catch(e){ return 0; } })(), changes = 0;
+function fileName(ext){ return (S.show.name || 'show').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase() + '-' + new Date().toISOString().slice(0, 10) + ext; }
+function download(text, name, type){
+  var b = new Blob([text], {type: type}), a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = name;
   document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
-  track('backup-save');
+}
+function saveFile(){
+  download(JSON.stringify(S, null, 1), fileName('.json'), 'application/json');
+  lastFile = Date.now(); changes = 0; try{ localStorage.setItem('sss.saved', String(lastFile)); }catch(e){}
+  track('backup-save'); renderTop();
+}
+$('saveFile').addEventListener('click', saveFile);
+$('saveTop').addEventListener('click', saveFile);
+function csvCell(v){ v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+function csv(rows){ return '﻿' + rows.map(function(r){ return r.map(csvCell).join(','); }).join('\r\n'); }
+$('csvEx').addEventListener('click', function(){
+  var o = C.compute(S), rows = [['No.', 'Name', 'Classes', 'Entries', 'Fee', 'Paid', 'Junior', 'Member', 'Groups', 'Prize money', 'Donates', 'Points', 'Places']];
+  S.exhibitors.slice().sort(function(a, b){ return a.no - b.no; }).forEach(function(e){
+    var q = o.per[e.id];
+    rows.push([e.no, e.name, C.entriesText(S, e.id), q.entries, (q.fee / 100).toFixed(2), e.paid ? 'yes' : '', e.junior ? 'yes' : '', e.member !== false ? 'yes' : '', e.tags || '', (q.prize / 100).toFixed(2), e.donate ? 'yes' : '', C.fmtPts(q.pts),
+      q.places.map(function(n, i){ return n ? n + 'x' + S.show.places[i].label : ''; }).filter(Boolean).join(' ')]);
+  });
+  download(csv(rows), fileName('-exhibitors.csv'), 'text/csv'); track('csv-export');
+});
+$('csvRes').addEventListener('click', function(){
+  var exByNo = {}; S.exhibitors.forEach(function(e){ exByNo[e.no] = e; });
+  var on = []; S.show.places.forEach(function(p, i){ if(!p.off) on.push(i); });
+  var rows = [['Class', 'Title', 'Section', 'Entries'].concat(on.map(function(i){ return S.show.places[i].label; }))], o = C.compute(S);
+  sortedClasses().forEach(function(c){
+    var r = S.results[c.id] || {p: []};
+    rows.push([c.code, c.title, secName(c.sec), (o.classEntries[c.id] || []).length].concat(on.map(function(i){
+      return r.none ? 'no award' : C.placeNos(r.p[i]).map(function(n){ var e = exByNo[n]; return n + (e ? ' ' + e.name : ''); }).join(' = ');
+    })));
+  });
+  rows.push([]); rows.push(['Cup', 'Winner', 'Score']);
+  o.trophies.forEach(function(t){ rows.push([t.t.name, cupWinText(t), t.table.length ? (t.t.kind === 'money' ? (t.table[0].score / 100).toFixed(2) : C.fmtPts(t.table[0].score)) : '']); });
+  download(csv(rows), fileName('-results.csv'), 'text/csv'); track('csv-export');
 });
 $('loadFile').addEventListener('change', function(){
   var f = this.files && this.files[0]; if(!f) return;
   var rd = new FileReader();
   rd.onload = function(){
+    var next;
     try{
       var o = JSON.parse(rd.result);
       if(!o || !o.show || !Array.isArray(o.classes)) throw new Error('not a show');
-      if((S.classes.length || S.exhibitors.length) && !S.example && !confirm('Replace the show in this browser with "' + (o.show.name || 'the file') + '"?')) return;
-      S = clean(o); save(); track('backup-load'); showTab('schedule'); say('Show opened.');
-    }catch(e){ say('That file is not a Show Secretary file.'); }
+      next = clean(o); C.compute(next);
+    }catch(e){ say('That file is not a Show Secretary file.'); return; }
+    if((S.classes.length || S.exhibitors.length) && !S.example && !confirm('Replace the show in this browser with "' + (next.show.name || 'the file') + '"?')) return;
+    S = next; save(); track('backup-load'); showTab('schedule'); say('Show opened.');
   };
   rd.readAsText(f); this.value = '';
 });
 $('nextYear').addEventListener('click', function(){
-  if(!confirm('Keep the classes, prize money and cups, and clear all exhibitors, entries and placings? Save a show file first if you want to keep this year.')) return;
-  S.exhibitors = []; S.entries = {}; S.results = {}; S.example = false;
-  S.trophies.forEach(function(t){ delete t.pick; delete t.pickNote; t.exclude = []; });
-  S.show.date = ''; save(); showTab('entries'); say('Ready for next year.');
+  if(S.example){ S = C.blankShow(); save(); showTab('schedule'); return; }
+  if(!confirm('Keep the classes, prize money and cups, and clear all exhibitors, entries and placings? Each cup remembers this year\'s winner. Save a show file first if you want to keep this year.')) return;
+  C.nextYear(S); save(); showTab('entries'); say('Ready for next year.');
 });
 
 /* ---------- Pro ---------- */
@@ -1327,9 +1562,9 @@ function exampleShow(){
   X.trophies = [
     {id: C.nid(X, 't'), name: 'Hartley Vegetable Cup', kind: 'points', sections: [sec('Vegetables')], tie: 'firsts'},
     {id: C.nid(X, 't'), name: 'Rose Bowl (flowers)', kind: 'points', sections: [sec('Flowers')], tie: 'firsts'},
-    {id: C.nid(X, 't'), name: 'RHS Banksian Medal', kind: 'points', sections: [sec('Vegetables'), sec('Flowers')], tie: 'firsts'},
+    {id: C.nid(X, 't'), name: 'RHS Banksian Medal', kind: 'points', sections: [sec('Vegetables'), sec('Flowers')], tie: 'firsts', noRepeat: 2, history: [{year: new Date().getFullYear() - 1, names: ['Rita Patel']}]},
     {id: C.nid(X, 't'), name: 'Junior Shield', kind: 'points', junior: true, tie: 'share'},
-    {id: C.nid(X, 't'), name: 'Best in Show', kind: 'pick', pick: X.exhibitors[6].id, pickNote: 'Class 7, rose'}
+    {id: C.nid(X, 't'), name: 'Best in Show', kind: 'class', judgePick: true, cls: X.classes.filter(function(c){ return c.code === '7'; })[0].id, note: 'rose'}
   ];
   return X;
 }
@@ -1340,12 +1575,21 @@ $('freeN').textContent = FREE_ENTRIES; Array.prototype.forEach.call(document.que
 var h = (location.hash || '').replace('#t-', '');
 var q0 = new URLSearchParams(location.search);
 if(q0.get('bought') === '1' || h === 'proSec') h = 'prizes';
-showTab(['schedule','entries','cards','results','prizes'].indexOf(h) >= 0 ? h : (S.exhibitors.length ? 'entries' : 'schedule'));
+try{ showTab(['schedule','entries','cards','results','prizes'].indexOf(h) >= 0 ? h : (S.exhibitors.length ? 'entries' : 'schedule')); }
+catch(err){
+  /* A saved show this version can't draw: never leave a blank page. Offer the raw copy, then a fresh start. */
+  var bar = document.createElement('div'); bar.className = 'warnbox'; bar.style.margin = '16px';
+  bar.innerHTML = '<b>Your saved show could not be opened.</b> <button class="btn small" id="rawDl">Download it</button> <button class="btn small red" id="rawReset">Start fresh</button>';
+  document.querySelector('main').prepend(bar);
+  $('rawDl').onclick = function(){ try{ download(localStorage.getItem(KEY) || '', 'show-secretary-backup.json', 'application/json'); }catch(e){} };
+  $('rawReset').onclick = function(){ if(confirm('Clear the saved show from this browser?')){ try{ localStorage.removeItem(KEY); }catch(e){} location.reload(); } };
+}
+$('footPro').addEventListener('click', function(e){ e.preventDefault(); track('footer-pro'); showTab('prizes'); $('proSec').scrollIntoView({behavior: 'smooth'}); });
 if(q0.get('bought') === '1' && !isPro()) setTimeout(function(){ $('proSec').scrollIntoView(); $('proKey').focus(); }, 400);
 try{ var seenPro = false; new IntersectionObserver(function(es){ es.forEach(function(x){ if(x.isIntersecting && !seenPro && !isPro()){ seenPro = true; track('pro-view'); } }); }).observe($('proSec')); }catch(e){}
 if(GC_CODE){ var gs = document.createElement('script'); gs.async = true; gs.src = '//gc.zgo.at/count.js'; gs.setAttribute('data-goatcounter', 'https://' + GC_CODE + '.goatcounter.com/count'); document.head.appendChild(gs); }
 (function(){
-  var via = (q0.get('via') || '').replace(/[^a-z0-9-]/g, '').slice(0, 20), af = (q0.get('a') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+  var via = (q0.get('via') || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 20), af = (q0.get('a') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
   if(via) track('via-' + via);
   if(af) track('aff-' + af);
   if(hadData && (S.exhibitors.length || S.classes.length) && !S.example) track('return-visit');
