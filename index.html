@@ -1,0 +1,1360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Show Secretary – entries, exhibit cards, prize money and cups for village shows</title>
+<meta name="description" content="For the secretary of a flower, produce or village show. Paste your schedule, type in entries, print every exhibit card, enter the judges' placings, and get each exhibitor's prize money and every cup winner worked out. Free for small shows, no sign-up.">
+<link rel="canonical" href="https://samsbench.com/show-secretary/">
+<meta property="og:title" content="Show Secretary – entries, cards, prize money and cups">
+<meta property="og:description" content="Paste the schedule, type the entries, print the exhibit cards. After judging: prize money per exhibitor, cup winners and ties, the coin float, the results for the newsletter.">
+<meta property="og:url" content="https://samsbench.com/show-secretary/">
+<meta property="og:image" content="https://samsbench.com/show-secretary/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&family=Young+Serif&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f6f0e1; --card:#fffdf6; --ink:#1b2a20; --soft:#3c4a3f; --rule:#d6c9a8; --rule2:#e8dec5;
+  --tent:#21452f; --tent2:#2f5d40; --cream:#efe4c8;
+  --first:#b3261e; --second:#1d4f9c; --third:#c99a00; --hc:#2e7d32;
+  --ok:#1e6b34; --bad:#a3261b; --warnbg:#fff3cd; --focus:#c99a00;
+  --r:10px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.5 "Public Sans",system-ui,sans-serif}
+h1,h2,h3{font-family:"Young Serif",Georgia,serif;font-weight:400;line-height:1.15;margin:0}
+a{color:var(--second)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+/* the marquee: striped canopy with a scalloped edge */
+.canopy{background:repeating-linear-gradient(90deg,var(--tent) 0 44px,var(--cream) 44px 88px);height:30px}
+.scallop{height:16px;background:radial-gradient(circle at 22px -6px,var(--tent) 21px,transparent 22px) 0 0/88px 16px repeat-x,
+  radial-gradient(circle at 66px -6px,var(--cream) 21px,transparent 22px) 0 0/88px 16px repeat-x}
+header.top{max-width:1120px;margin:0 auto;padding:18px 16px 8px;display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+.brand{display:flex;gap:12px;align-items:center}
+.rosette{width:46px;height:46px;flex:none}
+.brand h1{font-size:30px}
+.brand p{margin:2px 0 0;color:var(--soft);font-size:15px}
+.tally{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.tally span{background:var(--card);border:1px solid var(--rule);border-radius:999px;padding:3px 11px;font-size:15px;white-space:nowrap}
+.tally b{font-variant-numeric:tabular-nums}
+
+nav.steps{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:2px solid var(--rule)}
+nav.steps .in{max-width:1120px;margin:0 auto;display:flex;gap:4px;overflow-x:auto;padding:8px 16px 0;scrollbar-width:none}
+nav.steps button{border:1px solid var(--rule);border-bottom:none;background:var(--rule2);border-radius:var(--r) var(--r) 0 0;padding:9px 14px 8px;
+  cursor:pointer;white-space:nowrap;font-weight:700;color:var(--soft)}
+nav.steps button .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--soft);color:#fff;font-size:13px;margin-right:6px}
+nav.steps button[aria-selected=true]{background:var(--card);color:var(--ink);position:relative;top:2px;border-color:var(--rule)}
+nav.steps button[aria-selected=true] .n{background:var(--first)}
+
+main{max-width:1120px;margin:0 auto;padding:18px 16px 60px}
+section.tab[hidden]{display:none}
+.lead{font-size:19px;max-width:760px;margin:4px 0 18px}
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:18px;margin:0 0 16px}
+.panel h2{font-size:23px;margin-bottom:8px}
+.panel h3{font-size:19px;margin:14px 0 6px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+label.f{display:flex;flex-direction:column;gap:3px;font-weight:700;font-size:15px;max-width:100%}
+select{max-width:100%}
+label.f small{font-weight:400}
+input[type=text],input[type=number],input[type=date],input[type=email],select,textarea{border:1.5px solid #b9ab88;border-radius:8px;padding:8px 10px;background:#fff;min-height:42px}
+input.num{width:84px;font-variant-numeric:tabular-nums}
+input.money{width:92px}
+textarea{width:100%;min-height:170px;font-size:16px;line-height:1.4}
+.btn{display:inline-flex;align-items:center;gap:8px;border:2px solid var(--tent);background:var(--tent);color:#fff;border-radius:999px;padding:9px 18px;font-weight:700;cursor:pointer;min-height:44px;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--tent)}
+.btn.red{background:var(--first);border-color:var(--first)}
+.btn.small{padding:5px 12px;min-height:34px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.linkbtn{background:none;border:none;color:var(--second);text-decoration:underline;cursor:pointer;padding:4px}
+.del{background:none;border:none;color:var(--bad);cursor:pointer;font-size:20px;line-height:1;padding:4px 8px}
+.ok{color:var(--ok);font-weight:700}
+.err{color:var(--bad);font-weight:700}
+.warnbox{background:var(--warnbg);border:1px solid #e3c766;border-radius:8px;padding:10px 14px;margin:10px 0}
+.warnbox ul{margin:4px 0 0;padding-left:20px}
+.example{background:#fde9e7;border:1px solid #e7a59f;border-radius:8px;padding:8px 14px;margin:0 0 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* welcome */
+.welcome{display:grid;grid-template-columns:1.2fr 1fr;gap:22px;align-items:center}
+.welcome h2{font-size:34px;margin-bottom:10px}
+.welcome ol{padding-left:22px;margin:10px 0 16px}
+.welcome li{margin:3px 0}
+.miniCard{transform:rotate(-2deg);max-width:360px;justify-self:center}
+
+/* exhibit card (screen + print share this) */
+.ecard{background:#fff;border:1.5px solid #222;border-radius:4px;display:grid;grid-template-rows:auto 1fr auto auto;color:#111;font-family:"Public Sans",Arial,sans-serif;overflow:hidden}
+.ecard .sh{font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:5px 9px;border-bottom:1px solid #222;display:flex;justify-content:space-between;gap:8px}
+.ecard .mid{display:grid;grid-template-columns:1fr auto;gap:6px;padding:6px 9px;align-items:start}
+.ecard .cl{font-size:13px}
+.ecard .cl b{display:block;font-family:"Young Serif",Georgia,serif;font-size:34px;line-height:1;font-weight:400}
+.ecard .ti{font-size:13px;line-height:1.25;margin-top:4px}
+.ecard .exn{text-align:center;border:2px solid #111;border-radius:6px;padding:2px 10px}
+.ecard .exn small{display:block;font-size:10px;text-transform:uppercase}
+.ecard .exn b{font-size:30px;line-height:1.05}
+.ecard .fold{border-top:1.5px dashed #555;font-size:10px;text-align:center;padding:1px;color:#333}
+.ecard .nm{padding:6px 9px 8px;font-size:14px;transform:rotate(180deg)}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th,.tbl td{border-bottom:1px solid var(--rule2);padding:6px 6px;text-align:left;vertical-align:middle}
+.tbl th{font-size:14px;color:var(--soft);font-weight:700;white-space:nowrap}
+.tbl td.n,.tbl th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tbl input[type=text]{width:100%;min-height:36px;padding:5px 8px}
+#placesBody input.money{width:100px}
+.secHead td{background:var(--rule2);font-family:"Young Serif",Georgia,serif;font-size:17px}
+.scroll{overflow-x:auto}
+
+/* results: one strip per class, place boxes coloured like prize cards */
+.rlist{display:flex;flex-direction:column;gap:6px}
+.rrow{display:grid;grid-template-columns:minmax(170px,1.2fr) repeat(var(--places),minmax(92px,1fr)) auto;gap:8px;align-items:center;background:#fff;border:1px solid var(--rule2);border-radius:8px;padding:6px 8px}
+.rrow .ct b{font-family:"Young Serif",Georgia,serif;font-size:19px;margin-right:6px}
+.rrow .ct small{display:block;color:var(--soft)}
+.pbox{display:flex;flex-direction:column;gap:2px}
+.pbox input{width:100%;min-height:40px;text-align:center;font-weight:700;font-size:18px;border-width:2px;border-left-width:8px}
+.pbox .who{font-size:13px;min-height:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p0 input{border-left-color:var(--first)} .p1 input{border-left-color:var(--second)} .p2 input{border-left-color:var(--third)} .p3 input{border-left-color:var(--hc)}
+.rrow.none{opacity:.6}
+.rrow label.na{font-size:13px;display:flex;gap:4px;align-items:center;white-space:nowrap}
+
+/* prizes */
+.cups{align-items:start;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:12px}
+.cup{background:#fff;border:1px solid var(--rule);border-radius:var(--r);padding:12px 14px}
+.cup .win{font-family:"Young Serif",Georgia,serif;font-size:21px;margin:6px 0 2px}
+.cup .why{font-size:14px;color:var(--soft)}
+.cup details{margin-top:6px;font-size:15px}
+.cup .cfg{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips label{border:1px solid var(--rule);border-radius:999px;padding:3px 10px;font-size:14px;display:flex;gap:5px;align-items:center;background:var(--card)}
+.big{font-family:"Young Serif",Georgia,serif;font-size:30px}
+.coins{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.coins span{background:#fff;border:1px solid var(--rule);border-radius:999px;padding:3px 12px;font-variant-numeric:tabular-nums}
+
+/* pro */
+.pro{border:2px solid var(--third);background:#fffaf0}
+.pro .price{font-family:"Young Serif",Georgia,serif;font-size:30px}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;z-index:20;max-width:92vw;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);font-size:15px}
+
+#printArea{display:none}
+@media (max-width:760px){
+  body{font-size:16px}
+  .welcome{grid-template-columns:1fr}
+  .brand h1{font-size:25px}
+  .tally{margin-left:0}
+  .rrow{grid-template-columns:repeat(var(--places),1fr);}
+  .rrow .ct{grid-column:1/-1}
+  .rrow label.na{grid-column:1/-1}
+  .tbl.stack thead{display:none}
+  .tbl.stack tr{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;border-bottom:1px solid var(--rule);padding:8px 0}
+  .tbl.stack td{border:none;padding:2px 0}
+  .tbl.stack td[data-l]::before{content:attr(data-l);display:block;font-size:12px;color:var(--soft);font-weight:700}
+  .tbl.stack td.wide{grid-column:1/-1}
+}
+@media print{
+  body{background:#fff}
+  body > *:not(#printArea){display:none!important}
+  #printArea{display:block}
+  .pa-foot{font-size:9px;color:#444;margin-top:4mm}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .cards .ecard{height:var(--ch);border-radius:0;break-inside:avoid;border-width:.6px}
+  .pbreak{break-after:page}
+  .sheet h2{font-size:18px;margin:0 0 2mm}
+  .sheet table{width:100%;border-collapse:collapse;font-size:11pt}
+  .sheet th,.sheet td{border:1px solid #444;padding:4px 6px;text-align:left}
+  .slip{border:1px dashed #555;padding:4mm;break-inside:avoid;margin-bottom:3mm;font-size:11pt}
+  .slips{display:grid;grid-template-columns:1fr 1fr;gap:3mm}
+  .slip .amt{font-size:20pt;font-family:"Young Serif",Georgia,serif}
+}
+</style>
+</head>
+<body>
+<div class="canopy" aria-hidden="true"></div><div class="scallop" aria-hidden="true"></div>
+<header class="top">
+  <div class="brand">
+    <svg class="rosette" viewBox="0 0 48 48" aria-hidden="true"><g fill="#b3261e"><circle cx="24" cy="20" r="17"/></g><g fill="#fff3e0"><circle cx="24" cy="20" r="11"/></g><circle cx="24" cy="20" r="8" fill="#b3261e"/><path d="M17 34l-5 13 7-4 3 5 2-14zM31 34l5 13-7-4-3 5-2-14z" fill="#b3261e"/><text x="24" y="24" text-anchor="middle" font-size="10" font-family="Georgia" fill="#fff">1st</text></svg>
+    <div><h1>Show Secretary</h1><p id="showLine">Entries, exhibit cards, prize money and cups for your show</p></div>
+  </div>
+  <div class="tally" id="tally"></div>
+</header>
+<nav class="steps" aria-label="Steps"><div class="in" role="tablist" id="tabs">
+  <button role="tab" data-t="schedule"><span class="n">1</span>Schedule</button>
+  <button role="tab" data-t="entries"><span class="n">2</span>Entries</button>
+  <button role="tab" data-t="cards"><span class="n">3</span>Cards &amp; sheets</button>
+  <button role="tab" data-t="results"><span class="n">4</span>Results</button>
+  <button role="tab" data-t="prizes"><span class="n">5</span>Prize money &amp; cups</button>
+</div></nav>
+
+<main>
+<div id="exampleBar" class="example" hidden><b>This is an example show.</b> Click around, print a card. Nothing here is real. <button class="btn small red" id="exampleClear">Start my own show</button></div>
+
+<!-- 1 SCHEDULE -->
+<section class="tab" id="t-schedule">
+  <div class="panel welcome" id="welcome" hidden>
+    <div>
+      <h2>Your show's paperwork, done the evening you get the entries.</h2>
+      <ol>
+        <li>Paste the class list from your schedule.</li>
+        <li>Type each exhibitor's classes: <b>1, 4, 12-14</b>. They get a number.</li>
+        <li>Print every exhibit card, the receipts and the judges' sheets.</li>
+        <li>On the day, type the placings. Prize money for each exhibitor, the cup winners, the coins you need and the newsletter results are done.</li>
+      </ol>
+      <div class="row"><button class="btn" id="goPaste">Paste my schedule</button><button class="btn ghost" id="loadExample">Show me an example first</button></div>
+      <p style="font-size:15px;margin-top:12px">Free for shows up to <b id="freeN">60</b> entries. Your show stays in this browser; nothing is uploaded.</p>
+    </div>
+    <div class="miniCard" id="miniCard"></div>
+  </div>
+
+  <div class="panel">
+    <h2>The show</h2>
+    <div class="row">
+      <label class="f" style="flex:2 1 240px">Show name<input type="text" id="sName" placeholder="Little Wapping Summer Show"></label>
+      <label class="f">Date<input type="date" id="sDate"></label>
+      <label class="f">Money<select id="sCur"><option value="GBP">£ pounds</option><option value="USD">$ US dollars</option><option value="CAD">$ Canadian</option><option value="AUD">$ Australian</option><option value="NZD">$ New Zealand</option><option value="EUR">€ euro</option></select></label>
+      <label class="f">Entry fee per class<input type="text" class="money" id="sFee" inputmode="decimal"></label>
+      <label class="f">Junior class fee<input type="text" class="money" id="sJFee" inputmode="decimal"></label>
+      <label class="f">Non-member fee <small>(if different)</small><input type="text" class="money" id="sNFee" inputmode="decimal" placeholder="same"></label>
+      <label class="f">Most one exhibitor pays <small>(cap)</small><input type="text" class="money" id="sCap" inputmode="decimal" placeholder="no cap"></label>
+      <label class="f">First exhibitor no.<input type="number" class="num" id="sFirst" min="1"></label>
+    </div>
+    <h3>Places, prize money and points</h3>
+    <div class="scroll"><table class="tbl" style="max-width:560px"><thead><tr><th>Place</th><th>Prize money</th><th>Points for cups</th><th>Used</th></tr></thead><tbody id="placesBody"></tbody></table></div>
+    <p style="font-size:15px;margin:6px 0 0">Classes or sections that pay more (a collection, a marrow) can have their own prize money below.</p>
+  </div>
+
+  <div class="panel" id="pastePanel">
+    <h2>Paste your class list</h2>
+    <p>Copy the classes out of your schedule (Word, PDF or the website) and paste them here. Lines like <b>12. Vase of sweet peas</b> become classes; lines like <b>SECTION B – FLOWERS</b> start a section.</p>
+    <textarea id="pasteBox" placeholder="SECTION A – VEGETABLES&#10;1. Three potatoes, one variety&#10;2. Five runner beans&#10;3. Heaviest marrow&#10;SECTION B – FLOWERS&#10;4. Vase of sweet peas&#10;..."></textarea>
+    <div class="row" style="margin-top:10px"><button class="btn" id="readSched">Read these classes</button><span id="readMsg"></span></div>
+  </div>
+
+  <div class="panel">
+    <div class="row" style="justify-content:space-between"><h2 id="classHead">Classes</h2><button class="btn small ghost" id="addClass">+ Add a class</button></div>
+    <div class="scroll"><table class="tbl stack" id="classTbl"><thead><tr><th>Class</th><th>Title</th><th>Section</th><th>Prize money <small>(1st, 2nd, 3rd)</small></th><th>Fee</th><th>Junior</th><th></th></tr></thead><tbody id="classBody"></tbody></table></div>
+    <p id="noClasses" hidden>No classes yet. Paste them above, or add them one at a time.</p>
+    <div id="secMoney"></div>
+  </div>
+</section>
+
+<!-- 2 ENTRIES -->
+<section class="tab" id="t-entries" hidden>
+  <div class="panel">
+    <h2>Add an exhibitor</h2>
+    <div class="row">
+      <label class="f" style="flex:2 1 220px">Name<input type="text" id="eName" autocomplete="off" placeholder="Mrs J. Smith"></label>
+      <label class="f" style="flex:3 1 260px">Classes<input type="text" id="eCls" autocomplete="off" placeholder="1, 4, 12-14"></label>
+      <label class="f" style="flex-direction:row;gap:6px;align-items:center;min-height:42px"><input type="checkbox" id="eJun">Junior</label>
+      <button class="btn" id="eAdd">Add, give a number</button>
+    </div>
+    <div id="eHint" style="margin-top:8px;font-size:15px;min-height:22px"></div>
+    <details style="margin-top:8px"><summary>Paste many at once</summary>
+      <p style="font-size:15px">One exhibitor per line: name, a colon, then the classes. <b>Ann Pike: 1, 3, 12-14</b></p>
+      <textarea id="bulkBox" style="min-height:110px"></textarea>
+      <button class="btn small" id="bulkAdd">Add all</button> <span id="bulkMsg"></span>
+    </details>
+  </div>
+  <div class="panel">
+    <div class="row" style="justify-content:space-between"><h2 id="exHead">Exhibitors</h2><input type="text" id="exFind" placeholder="Find a name or number" style="max-width:240px"></div>
+    <div class="scroll"><table class="tbl stack"><thead><tr><th class="n">No.</th><th>Name</th><th>Classes</th><th class="n">Entries</th><th class="n">Fee</th><th>Paid</th><th>Junior</th><th>Member</th><th title="Gives prize money back to the society">Donates prizes</th><th title="For cups only some can win: resident, novice, under 12">Groups</th><th></th></tr></thead><tbody id="exBody"></tbody></table></div>
+    <p id="noEx" hidden>No exhibitors yet.</p>
+  </div>
+</section>
+
+<!-- 3 CARDS -->
+<section class="tab" id="t-cards" hidden>
+  <div class="panel">
+    <h2>Exhibit cards</h2>
+    <p>One card per entry, eight to a page. Fold along the dashed line so the name faces down and the judges see only the numbers.</p>
+    <div class="row">
+      <label class="f">Order<select id="cOrder"><option value="ex">By exhibitor (to hand out)</option><option value="cls">By class (to lay out on the benches)</option></select></label>
+      <label class="f">Paper<select id="cPaper"><option value="A4">A4</option><option value="Letter">US Letter</option></select></label>
+      <label class="f" style="flex-direction:row;gap:6px;align-items:center;min-height:42px"><input type="checkbox" id="cName" checked>Name under the fold</label>
+      <button class="btn" id="pCards">Print exhibit cards</button>
+    </div>
+    <div class="row" style="margin-top:12px;gap:16px;align-items:flex-start"><div id="cardPreview" style="width:100%;max-width:340px"></div><p id="cardCount" style="margin:0"></p></div>
+  </div>
+  <div class="panel">
+    <h2>Receipts and judges' sheets</h2>
+    <div class="row">
+      <button class="btn ghost" id="pReceipts">Print entry receipts</button>
+      <button class="btn ghost" id="pSheets">Print judges' sheets</button>
+    </div>
+    <p style="font-size:15px">Receipts: each exhibitor's number, classes and fee. Judges' sheets: each class with the exhibitor numbers on the bench and boxes for the placings.</p>
+  </div>
+</section>
+
+<!-- 4 RESULTS -->
+<section class="tab" id="t-results" hidden>
+  <div class="panel">
+    <div class="row" style="justify-content:space-between"><h2>Placings</h2>
+      <div class="row"><label class="f">Section<select id="rSec"></select></label><label class="f">Go to class<input type="text" id="rGo" style="width:110px" placeholder="12"></label></div>
+    </div>
+    <p style="font-size:15px">Type the exhibitor number from the judges' slip. Enter moves to the next box. Equal places: <b>12=15</b> (their prize money and points are shared).</p>
+    <div id="rWarn"></div>
+    <div class="rlist" id="rList"></div>
+  </div>
+</section>
+
+<!-- 5 PRIZES -->
+<section class="tab" id="t-prizes" hidden>
+  <div class="panel">
+    <h2>Prize money</h2>
+    <div class="row" style="gap:28px">
+      <div><div class="big" id="payTotal">£0</div><div>to pay out in <b id="payEnv">0</b> envelopes</div></div>
+      <div><div class="big" id="payDon">£0</div><div>given back by donors</div></div>
+      <div><div class="big" id="payMax">£0</div><div>most it could be (every place awarded)</div></div>
+    </div>
+    <h3>Coins and notes to fill the envelopes exactly</h3>
+    <div class="coins" id="coinList"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="pEnv">Print envelope slips</button>
+      <button class="btn ghost" id="pPay">Print pay-out sheet</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="row" style="justify-content:space-between"><h2>Cups and trophies</h2><button class="btn small ghost" id="addCup">+ Add a cup</button></div>
+    <div class="cups" id="cupList"></div>
+    <p id="noCups" hidden>Add each cup from your schedule and say how it is won. The winner is worked out from the placings.</p>
+  </div>
+  <div class="panel">
+    <h2>Results for the newsletter</h2>
+    <div class="row"><label class="f">Names as<select id="nmStyle"><option value="full">Full name</option><option value="init">Initial and surname</option><option value="no">Exhibitor number only</option></select></label>
+      <button class="btn" id="copyRes">Copy results</button><button class="btn ghost" id="pRes">Print results</button></div>
+    <textarea id="resText" readonly style="margin-top:10px;min-height:150px"></textarea>
+  </div>
+  <div class="panel">
+    <h2>Keep a copy</h2>
+    <p>Your show is saved in this browser only. Save a file to move it to another computer or keep last year's show.</p>
+    <div class="row">
+      <button class="btn ghost" id="saveFile">Save show file</button>
+      <label class="btn ghost" for="loadFile">Open a show file</label><input type="file" id="loadFile" accept=".json,application/json" hidden>
+      <button class="btn ghost" id="nextYear">Next year: keep classes and cups, clear entries</button>
+    </div>
+  </div>
+  <div class="panel pro" id="proSec">
+    <h2>Show Secretary Pro</h2>
+    <div id="proBuy">
+      <p>Free covers a show with up to <b class="freeN2">60</b> entries. A bigger show needs Pro for the printouts, prize money and cups. <span class="price" id="proPrice"></span> once, for every show you run.</p>
+      <div class="row"><a class="btn red" id="buyLink" href="#" target="_blank" rel="noopener">Buy Pro</a></div>
+    </div>
+    <div id="proState"></div>
+    <div class="row" style="margin-top:12px">
+      <label class="f" style="flex:1 1 260px" for="proKey" id="proLbl">Already bought? The email you paid with, or a gift code<input type="text" id="proKey" autocomplete="email"></label>
+      <button class="btn ghost" id="proGo">Unlock</button>
+    </div>
+    <div id="proMsg" style="margin-top:6px"></div>
+  </div>
+</section>
+</main>
+<footer>Show Secretary is a small tool made by one person. Your data never leaves this browser unless you save a file. <a href="?via=footer#t-prizes" id="footPro">Pro</a></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div id="printArea"></div>
+
+<script>
+/*CORE-START*/
+var SSCore = (function(){
+'use strict';
+
+/* Money is kept in minor units (pence / cents) as integers everywhere. */
+var CUR = {
+  GBP: {sym:'£', minor:'p', den:[2000,1000,500,200,100,50,20,10,5,2,1]},
+  USD: {sym:'$', minor:'¢', den:[2000,1000,500,100,25,10,5,1]},
+  CAD: {sym:'$', minor:'¢', den:[2000,1000,500,200,100,25,10,5]},
+  AUD: {sym:'$', minor:'c', den:[2000,1000,500,200,100,50,20,10,5]},
+  NZD: {sym:'$', minor:'c', den:[2000,1000,500,200,100,50,20,10]},
+  EUR: {sym:'€', minor:'c', den:[2000,1000,500,200,100,50,20,10,5,2,1]}
+};
+function cur(code){ return CUR[code] || CUR.GBP; }
+
+function fmt(minor, code){
+  var c = cur(code), n = Math.round(minor || 0), neg = n < 0; n = Math.abs(n);
+  if(c.sym === '£' && n > 0 && n < 100) return (neg ? '-' : '') + n + 'p';
+  var s = c.sym + Math.floor(n / 100) + (n % 100 ? '.' + ('0' + n % 100).slice(-2) : '');
+  return (neg ? '-' : '') + s;
+}
+/* "1.50", "£1.50", "150p", "50p", "2" -> minor units; '' -> null; junk -> NaN */
+function parseMoney(s){
+  s = String(s == null ? '' : s).trim().replace(/[£$€,\s]/g, '');
+  if(s === '') return null;
+  var m = /^(\d+)(p|c|¢)$/i.exec(s);
+  if(m) return parseInt(m[1], 10);
+  if(!/^\d+(\.\d{1,2})?$/.test(s) && !/^\.\d{1,2}$/.test(s)) return NaN;
+  return Math.round(parseFloat(s) * 100);
+}
+
+/* Breakdown of one amount into notes/coins (greedy is exact for these canonical systems). Returns {counts:{den:n}, rest} */
+function coins(minor, code){
+  var den = cur(code).den, counts = {}, r = Math.max(0, Math.round(minor || 0));
+  for(var i = 0; i < den.length; i++){ var k = Math.floor(r / den[i]); if(k){ counts[den[i]] = k; r -= k * den[i]; } }
+  return {counts: counts, rest: r};
+}
+/* Float for a list of envelopes: each envelope is made up on its own, so counts add per envelope. */
+function floatFor(amounts, code){
+  var tot = {}, rest = 0;
+  amounts.forEach(function(a){ var b = coins(a, code); rest += b.rest; for(var d in b.counts) tot[d] = (tot[d] || 0) + b.counts[d]; });
+  return {counts: tot, rest: rest};
+}
+
+/* Class codes are strings ("12", "12a", "A3", "101"). A list like "1, 3, 5-7 12a" -> codes in order, unique.
+   Ranges only between plain numbers, and only within the known codes when `known` is given. */
+function parseList(text, known){
+  var out = [], bad = [], seen = {}, knownSet = null;
+  if(known){ knownSet = {}; known.forEach(function(k){ knownSet[String(k).toLowerCase()] = String(k); }); }
+  function add(c){
+    var key = c.toLowerCase();
+    if(knownSet){ if(!knownSet[key]){ bad.push(c); return; } c = knownSet[key]; }
+    if(!seen[c.toLowerCase()]){ seen[c.toLowerCase()] = 1; out.push(c); }
+  }
+  String(text || '').split(/[\s,;/&+]+|\band\b/i).forEach(function(tok){
+    tok = tok.replace(/^(class(es)?|no\.?|#)/i, '').replace(/[.)]+$/, '').trim();
+    if(!tok) return;
+    var r = /^(\d{1,4})\s*[-–]\s*(\d{1,4})$/.exec(tok);
+    if(r){
+      var a = +r[1], b = +r[2];
+      if(b < a || b - a > 500){ bad.push(tok); return; }
+      for(var i = a; i <= b; i++){
+        if(knownSet && !knownSet[String(i)]) continue;   // gaps in the schedule are skipped, not errors
+        add(String(i));
+      }
+      return;
+    }
+    if(/^[A-Za-z]{0,3}\d{1,4}[A-Za-z]?$/.test(tok)) add(tok); else bad.push(tok);
+  });
+  return {codes: out, bad: bad};
+}
+
+/* Paste the schedule as text. Section lines: "SECTION A – VEGETABLES", "Section 3: Flowers", "Division B Fruit", or an
+   all-capitals line with no class number. Class lines: "1. Three potatoes", "Class 12 – Vase of sweet peas", "A3 Jar of jam",
+   "12a) ...". Prize lines ("Prizes: 1st £2 ...") and blank lines are skipped. */
+function parseSchedule(text){
+  var sections = [], classes = [], skipped = [], cur = null, codes = {};
+  String(text || '').split(/\r?\n/).forEach(function(raw){
+    var line = raw.replace(/\t/g, ' ').replace(/\s+/g, ' ').trim();
+    if(!line) return;
+    var m = /^(section|division|dept\.?|department|category|part)\s+([A-Za-z0-9]{1,3})?\s*[-–—:.)]?\s*(.*)$/i.exec(line);
+    if(m){
+      cur = {code: (m[2] || '').toUpperCase(), name: (m[3] || '').replace(/[:.\s]+$/, '').trim() || ('Section ' + (m[2] || (sections.length + 1)))};
+      cur.name = tidyName(cur.name);
+      sections.push(cur); return;
+    }
+    m = /^(?:class\s*)?([A-Za-z]{0,3}\d{1,4}[A-Za-z]?)\s*(?:[.):\-–—]\s*|\s+)(.{2,})$/i.exec(line);
+    if(m && !/^(1st|2nd|3rd|4th)$/i.test(m[1]) && !/^\d{1,4}(st|nd|rd|th)\b/i.test(line)){
+      var code = m[1].replace(/^class/i, ''), title = m[2].trim();
+      if(/^[£$€]?\d+(\.\d\d)?p?$/.test(title)) { skipped.push(line); return; }   // a lone amount, not a class
+      if(codes[code.toLowerCase()]){ skipped.push(line); return; }
+      codes[code.toLowerCase()] = 1;
+      if(!cur){ cur = {code: '', name: 'General'}; sections.push(cur); }
+      classes.push({code: code, title: title, section: cur}); return;
+    }
+    var bare = line.replace(/\([^)]*\)/g, '').trim();
+    if(((/^[A-Z][A-Z &'’,\-–/]{3,60}$/.test(bare)) || (/\bsection\b/i.test(line) && line.length < 70 && !/[.!?]$/.test(line))) && !/PRIZE|RULE|ENTR(Y|IES)|NOTE|JUDG/i.test(bare)){
+      cur = {code: '', name: tidyName(line)}; sections.push(cur); return;
+    }
+    skipped.push(line);
+  });
+  // drop sections that got no classes (title lines, headings like "SCHEDULE")
+  var used = sections.filter(function(s){ return classes.some(function(c){ return c.section === s; }); });
+  return {sections: used, classes: classes, skipped: skipped};
+}
+function tidyName(s){
+  s = String(s).trim();
+  var bare = s.replace(/\([^)]*\)/g, '');
+  if(bare === bare.toUpperCase() && /[A-Z]/.test(bare)) s = s.toLowerCase().replace(/(^|[\s\-–/(&])([a-z])/g, function(_, a, b){ return a + b.toUpperCase(); });
+  return s;
+}
+
+/* ---------- the show ---------- */
+function blankShow(){
+  return {
+    v: 1,
+    show: {name: '', date: '', cur: 'GBP', fee: 50, juniorFee: 0, nonMemberFee: null, feeCap: null, firstNo: 1,
+           places: [{label: '1st', money: 150, pts: 3}, {label: '2nd', money: 100, pts: 2}, {label: '3rd', money: 50, pts: 1}, {label: 'HC', money: 0, pts: 0, off: true}]},
+    sections: [], classes: [], exhibitors: [], entries: {}, results: {}, trophies: [], seq: 1
+  };
+}
+function nid(S, p){ S.seq = (S.seq || 1) + 1; return p + S.seq.toString(36); }
+function placesOn(S){ return S.show.places.filter(function(p){ return !p.off; }); }
+
+function byId(list){ var o = {}; list.forEach(function(x){ o[x.id] = x; }); return o; }
+
+/* Money for place index i (0 = 1st) in class c: class override, then section override, then show default. Arrays may be shorter. */
+function placeMoney(S, c, i){
+  var sec = S.sections.filter(function(s){ return s.id === c.sec; })[0];
+  if(c.money && c.money[i] != null) return c.money[i];
+  if(sec && sec.money && sec.money[i] != null) return sec.money[i];
+  var p = S.show.places[i]; return p ? (p.money || 0) : 0;
+}
+function placePts(S, i){ var p = S.show.places[i]; return p ? (p.pts || 0) : 0; }
+/* Fee for one entry: the class's own fee, else the junior fee for junior classes, else the non-member fee (when the show
+   sets one) for non-members, else the usual fee. A per-exhibitor cap (e.g. NZ "$1 per entry, capped at $10") is applied in compute. */
+function entryFee(S, c, e){
+  if(c.fee != null) return c.fee;
+  if(c.junior) return S.show.juniorFee || 0;
+  if(e && e.member === false && S.show.nonMemberFee != null) return S.show.nonMemberFee;
+  return S.show.fee || 0;
+}
+/* A results box holds one exhibitor number, or several for an equal place ("equal 2nd"): their prize money and points are
+   divided equally (Taunton FS rule: "total divided equally between each of those joint winners"). */
+function placeNos(v){
+  if(v === '' || v == null) return [];
+  return (Array.isArray(v) ? v : [v]).map(function(x){ return parseInt(x, 10); }).filter(function(x){ return x > 0; });
+}
+
+function entryCount(S){ var n = 0; for(var k in S.entries) n += (S.entries[k] || []).length; return n; }
+function nextNo(S){
+  var used = {}, n = Math.max(1, S.show.firstNo || 1);
+  S.exhibitors.forEach(function(e){ used[e.no] = 1; });
+  while(used[n]) n++;
+  return n;
+}
+
+/* Everything the outputs need, computed fresh from S. Results hold exhibitor NUMBERS (what is written on the card), so a
+   late exhibitor added after judging still matches. */
+function compute(S){
+  var P = S.show.places.length, on = S.show.places.map(function(p){ return !p.off; });
+  var cls = byId(S.classes), exs = byId(S.exhibitors), secs = byId(S.sections);
+  var exByNo = {}; S.exhibitors.forEach(function(e){ exByNo[e.no] = e; });
+  var warn = [], per = {}, entered = {}, classEntries = {};
+  S.exhibitors.forEach(function(e){
+    var list = (S.entries[e.id] || []).filter(function(cid){ return cls[cid]; });
+    var fee = 0; list.forEach(function(cid){ fee += entryFee(S, cls[cid], e); entered[e.id + '|' + cid] = 1; (classEntries[cid] = classEntries[cid] || []).push(e.id); });
+    if(S.show.feeCap != null && fee > S.show.feeCap) fee = S.show.feeCap;
+    per[e.id] = {ex: e, entries: list.length, fee: fee, paid: e.paid ? fee : 0, wins: [], prize: 0, pts: 0, places: new Array(P).fill(0)};
+  });
+  var awards = [];   // {cls, place, ex, money, pts}
+  S.classes.forEach(function(c){
+    var r = S.results[c.id]; if(!r || r.none) return;
+    var seenEx = {};
+    (r.p || []).forEach(function(v, i){
+      if(i >= P || !on[i]) return;
+      var nos = placeNos(v), k = nos.length;
+      nos.forEach(function(no){
+        var e = exByNo[no];
+        if(!e){ warn.push({cls: c.id, msg: 'Class ' + c.code + ': ' + S.show.places[i].label + ' is exhibitor ' + no + ', who is not on the list.'}); return; }
+        var exId = e.id;
+        if(seenEx[exId]) warn.push({cls: c.id, msg: 'Class ' + c.code + ': exhibitor ' + e.no + ' is placed twice.'});
+        seenEx[exId] = 1;
+        if(!entered[exId + '|' + c.id]) warn.push({cls: c.id, msg: 'Class ' + c.code + ': exhibitor ' + e.no + ' (' + e.name + ') won ' + S.show.places[i].label + ' but has no entry in this class.'});
+        var a = {cls: c, place: i, ex: e, money: Math.floor(placeMoney(S, c, i) / k), pts: placePts(S, i) / k, equal: k > 1};
+        awards.push(a);
+        var q = per[exId]; q.wins.push(a); q.prize += a.money; q.pts += a.pts; q.places[i]++;
+      });
+    });
+    for(var i = 1; i < P; i++) if(on[i] && on[i - 1] && r.p && placeNos(r.p[i]).length && !placeNos(r.p[i - 1]).length) { warn.push({cls: c.id, msg: 'Class ' + c.code + ': ' + S.show.places[i].label + ' is filled but ' + S.show.places[i - 1].label + ' is empty.'}); break; }
+  });
+  var totalPrize = 0, totalFees = 0, totalPaid = 0, maxPrize = 0;
+  for(var k in per){ totalPrize += per[k].prize; totalFees += per[k].fee; totalPaid += per[k].paid; }
+  S.classes.forEach(function(c){ for(var i = 0; i < P; i++) if(on[i]) maxPrize += placeMoney(S, c, i); });
+  var envelopes = [];
+  S.exhibitors.forEach(function(e){ var q = per[e.id]; if(q.prize > 0 && !e.donate) envelopes.push(q); });
+  var donated = 0; S.exhibitors.forEach(function(e){ if(e.donate) donated += per[e.id].prize; });
+  var tro = S.trophies.map(function(t){ return trophyResult(S, t, awards, exs); });
+  return {per: per, awards: awards, warn: warn, totalPrize: totalPrize, totalFees: totalFees, totalPaid: totalPaid, maxPrize: maxPrize,
+          envelopes: envelopes, donated: donated, payout: totalPrize - donated, trophies: tro, classEntries: classEntries, entries: entryCount(S)};
+}
+
+/* Trophy rules:
+   points  - most points from places in the chosen sections/classes
+   money   - most prize money in the chosen sections/classes (e.g. RHS Banksian Medal: horticultural classes)
+   class   - whoever wins 1st in one class
+   pick    - judges' choice (Best in Show): the secretary picks the exhibitor
+   Eligible: junior-only / members-only / not in the exclude list. Ties: 'firsts' = most 1sts, then 2nds...; 'share' = shared. */
+function trophyResult(S, t, awards, exs){
+  var res = {t: t, winners: [], table: [], tie: false, note: ''};
+  if(t.kind === 'pick'){
+    if(t.pick && exs[t.pick]) res.winners = [exs[t.pick]];
+    else res.note = 'Not picked yet.';
+    return res;
+  }
+  var inScope = scopeFn(S, t);
+  if(t.kind === 'class'){
+    var w = awards.filter(function(a){ return a.place === 0 && inScope(a.cls) && eligible(t, a.ex); });
+    if(!t.cls){ res.note = 'Choose the class.'; return res; }
+    res.winners = w.map(function(a){ return a.ex; });
+    if(!w.length) res.note = 'No eligible 1st place yet.';
+    return res;
+  }
+  var tally = {};
+  awards.forEach(function(a){
+    if(!inScope(a.cls) || !eligible(t, a.ex)) return;
+    var r = tally[a.ex.id] = tally[a.ex.id] || {ex: a.ex, score: 0, places: new Array(S.show.places.length).fill(0)};
+    r.score += t.kind === 'money' ? a.money : a.pts; r.places[a.place]++;
+  });
+  var rows = []; for(var k in tally) if(tally[k].score > 0) rows.push(tally[k]);
+  function cmpPlaces(a, b){ for(var i = 0; i < a.places.length; i++){ if(a.places[i] !== b.places[i]) return b.places[i] - a.places[i]; } return 0; }
+  rows.sort(function(a, b){ return (b.score - a.score) || cmpPlaces(a, b) || (a.ex.no - b.ex.no); });
+  res.table = rows;
+  if(!rows.length){ res.note = 'No eligible places yet.'; return res; }
+  var top = rows.filter(function(r){ return r.score === rows[0].score; });
+  if(top.length > 1 && t.tie !== 'share'){
+    var best = top.filter(function(r){ return cmpPlaces(r, top[0]) === 0; });
+    res.tie = top.length > 1;
+    res.tieBroken = best.length === 1;
+    top = best;
+  } else if(top.length > 1) res.tie = true;
+  res.winners = top.map(function(r){ return r.ex; });
+  return res;
+}
+function eligible(t, e){
+  if(t.junior && !e.junior) return false;
+  if(t.members && e.member === false) return false;
+  if(t.exclude && t.exclude.indexOf(e.id) >= 0) return false;
+  if(t.group && String(t.group).trim()){
+    var want = String(t.group).trim().toLowerCase(), have = String(e.tags || '').toLowerCase().split(/\s*,\s*/);
+    if(have.indexOf(want) < 0) return false;
+  }
+  return true;
+}
+function scopeFn(S, t){
+  if(t.kind === 'class') return function(c){ return c.id === t.cls; };
+  var secs = {}; (t.sections || []).forEach(function(s){ secs[s] = 1; });
+  var codes = null;
+  if(t.classes && String(t.classes).trim()){
+    codes = {}; parseList(t.classes, S.classes.map(function(c){ return c.code; })).codes.forEach(function(c){ codes[c.toLowerCase()] = 1; });
+  }
+  var any = !(t.sections && t.sections.length) && !codes;
+  return function(c){ return any || secs[c.sec] || (codes && codes[String(c.code).toLowerCase()]); };
+}
+
+/* Put parsed schedule into S (replaces sections/classes only when S has none; otherwise appends new codes). */
+function applySchedule(S, parsed){
+  var have = {}; S.classes.forEach(function(c){ have[String(c.code).toLowerCase()] = 1; });
+  var secMap = new Map(), added = 0, dup = 0;
+  parsed.sections.forEach(function(ps){
+    var ex = S.sections.filter(function(s){ return s.name.toLowerCase() === ps.name.toLowerCase(); })[0];
+    if(!ex){ ex = {id: nid(S, 's'), code: ps.code, name: ps.name, money: null}; S.sections.push(ex); }
+    secMap.set(ps, ex.id);
+  });
+  parsed.classes.forEach(function(pc){
+    if(have[pc.code.toLowerCase()]){ dup++; return; }
+    have[pc.code.toLowerCase()] = 1;
+    S.classes.push({id: nid(S, 'c'), code: pc.code, title: pc.title, sec: secMap.get(pc.section), money: null, fee: null,
+                    junior: /\b(junior|child|children|under\s*\d+|u\d{1,2}s?|age[ds]?\s*\d|years? old|school)\b/i.test(pc.title + ' ' + pc.section.name)});
+    added++;
+  });
+  return {added: added, dup: dup};
+}
+
+/* Add or update an exhibitor's entries from a class list text. Returns {codes, bad}. One entry per class per exhibitor. */
+function setEntries(S, exId, text){
+  var r = parseList(text, S.classes.map(function(c){ return c.code; }));
+  var map = {}; S.classes.forEach(function(c){ map[String(c.code).toLowerCase()] = c.id; });
+  S.entries[exId] = r.codes.map(function(c){ return map[c.toLowerCase()]; });
+  return r;
+}
+function entriesText(S, exId){
+  var cls = byId(S.classes);
+  return (S.entries[exId] || []).filter(function(id){ return cls[id]; }).map(function(id){ return cls[id].code; }).join(', ');
+}
+
+function sortCodes(a, b){
+  var ma = /^([A-Za-z]*)(\d+)(.*)$/.exec(String(a)) || ['', String(a), 0, ''], mb = /^([A-Za-z]*)(\d+)(.*)$/.exec(String(b)) || ['', String(b), 0, ''];
+  return ma[1].localeCompare(mb[1]) || (+ma[2] - +mb[2]) || String(ma[3]).localeCompare(String(mb[3]));
+}
+
+return {CUR: CUR, cur: cur, fmt: fmt, parseMoney: parseMoney, coins: coins, floatFor: floatFor, parseList: parseList, parseSchedule: parseSchedule,
+        blankShow: blankShow, nid: nid, placesOn: placesOn, placeMoney: placeMoney, placePts: placePts, entryFee: entryFee, entryCount: entryCount,
+        nextNo: nextNo, compute: compute, placeNos: placeNos, applySchedule: applySchedule, setEntries: setEntries, entriesText: entriesText, sortCodes: sortCodes, byId: byId};
+})();
+/*CORE-END*/
+</script>
+<script>
+(function(){
+'use strict';
+var $ = function(id){ return document.getElementById(id); };
+var C = SSCore;
+var SITE = 'https://samsbench.com/show-secretary/';
+var APP_KEY = 'show-secretary';
+var VERIFY_URL = 'https://app-bizz-api.whop.site/api/verify';
+var CHECKOUT_HOME = '';
+var CHECKOUT_PLAN = '';
+var PRICE = '$24';
+var GIFT = [];
+var KEY = 'sss.v1', PROKEY = 'sss.pro', FREE_ENTRIES = 60;
+
+/* ---------- measurement (GoatCounter). ?via follows the visitor down the funnel; hits leave 700 ms apart (limit 4/s per IP+UA),
+   the first one 1.5 s after count.js loads (its own pageview goes first). Pattern from Handbell Chart. ---------- */
+var GC_CODE = 'showsecretary';
+var SRC = (function(){ try{
+  var q = new URLSearchParams(location.search), v = (q.get('via') || '').replace(/[^a-z0-9-]/g, '').slice(0, 20) || (q.get('a') ? 'aff' : '');
+  if(v){ localStorage.setItem('sss.src', JSON.stringify({v: v, t: Date.now()})); return v; }
+  var o = JSON.parse(localStorage.getItem('sss.src') || 'null');
+  return (o && Date.now() - o.t < 60 * 864e5) ? o.v : '';
+}catch(e){ return ''; } })();
+var FUNNEL_EV = {'tool-start':1, 'example':1, 'schedule-read':1, 'exhibitor-added':1, 'ten-entries':1, 'print-cards':1, 'real-cards':1, 'print-receipts':1, 'print-sheets':1,
+                 'result-entered':1, 'print-envelopes':1, 'print-payout':1, 'copy-results':1, 'print-results':1, 'cup-added':1, 'return-visit':1,
+                 'pro-view':1, 'pro-limit':1, 'buy-click':1, 'pro-unlocked':1, 'pro-gift':1};
+var ONCE = {}, QUEUE = [], SENDING = false, GC_READY = 0, SELFTEST = /^selftest/.test(SRC);
+function track(name){
+  try{
+    if(SELFTEST){ QUEUE.push(name + '.selftest'); drain(); return; }   // self-test: only '<event>.selftest' is ever sent (media-c ledger SELFTEST_SUFFIX_ONLY)
+    if(SRC && FUNNEL_EV[name]) QUEUE.push(name + '.' + SRC);
+    QUEUE.push(name); drain();
+  }catch(e){}
+}
+function drain(){
+  if(SENDING || !QUEUE.length) return;
+  if(!(window.goatcounter && window.goatcounter.count)){ SENDING = true; setTimeout(function(){ SENDING = false; drain(); }, 400); return; }
+  if(!GC_READY){ GC_READY = Date.now(); }
+  if(Date.now() - GC_READY < 1500){ SENDING = true; setTimeout(function(){ SENDING = false; drain(); }, 1500 - (Date.now() - GC_READY)); return; }
+  var n = QUEUE.shift(); SENDING = true;
+  try{ window.goatcounter.count({path: n, title: n, event: true}); }catch(e){}
+  setTimeout(function(){ SENDING = false; drain(); }, 700);
+}
+function trackOnce(name){ if(ONCE[name]) return; ONCE[name] = 1; track(name); }
+
+/* ---------- state ---------- */
+function lsGet(k, d){ try{ var t = localStorage.getItem(k); return t ? JSON.parse(t) : d; }catch(e){ return d; } }
+function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+function clean(o){
+  var b = C.blankShow(), d = C.blankShow().show;
+  if(!o || typeof o !== 'object' || !o.show || typeof o.show !== 'object') return b;
+  var S = {v: 1, show: Object.assign(b.show, o.show), sections: arr(o.sections), classes: arr(o.classes), exhibitors: arr(o.exhibitors),
+           entries: obj(o.entries), results: obj(o.results), trophies: arr(o.trophies), seq: +o.seq || 1, example: !!o.example};
+  if(!Array.isArray(S.show.places) || !S.show.places.length) S.show.places = d.places;
+  S.show.places = S.show.places.slice(0, 4).map(function(p, i){ p = p || {}; return {label: String(p.label || d.places[i].label), money: +p.money || 0, pts: +p.pts || 0, off: !!p.off}; });
+  ['fee', 'juniorFee', 'firstNo'].forEach(function(k){ if(!isFinite(+S.show[k])) S.show[k] = d[k]; S.show[k] = +S.show[k]; });
+  ['nonMemberFee', 'feeCap'].forEach(function(k){ S.show[k] = S.show[k] == null || !isFinite(+S.show[k]) ? null : +S.show[k]; });
+  if(!C.CUR[S.show.cur]) S.show.cur = 'GBP';
+  S.show.name = String(S.show.name || ''); S.show.date = String(S.show.date || '');
+  S.classes = S.classes.filter(function(c){ return c && c.id && c.code != null; }).map(function(c){ c.code = String(c.code); c.title = String(c.title || ''); return c; });
+  S.exhibitors = S.exhibitors.filter(function(e){ return e && e.id && isFinite(+e.no); }).map(function(e){ e.no = +e.no; e.name = String(e.name || ''); return e; });
+  S.sections = S.sections.filter(function(s){ return s && s.id; });
+  S.trophies = S.trophies.filter(function(t){ return t && t.id; });
+  for(var k in S.entries) if(!Array.isArray(S.entries[k])) delete S.entries[k];
+  return S;
+}
+function arr(x){ return Array.isArray(x) ? x : []; }
+function obj(x){ return x && typeof x === 'object' && !Array.isArray(x) ? x : {}; }
+var hadData = !!lsGet(KEY, null);
+var S = clean(lsGet(KEY, null));
+var PRO = lsGet(PROKEY, null);
+var TAB = 'schedule';
+var saveFailed = false;
+function save(){
+  if(!lsSet(KEY, S) && !saveFailed){ saveFailed = true; say('This browser is not saving. Use "Save show file" on step 5 to keep your work.'); }
+}
+function isPro(){ return !!(PRO && (PRO.email || PRO.gift)); }
+function overFree(){ return C.entryCount(S) > FREE_ENTRIES && !isPro(); }
+function cur(){ return S.show.cur; }
+function money(m){ return C.fmt(m, cur()); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+var toastT;
+function say(t){ var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(function(){ el.classList.remove('on'); }, 3200); }
+function touched(){ if(!S.example) trackOnce('tool-start'); }
+function secName(id){ var s = S.sections.filter(function(x){ return x.id === id; })[0]; return s ? s.name : ''; }
+function sortedClasses(){
+  var order = {}; S.sections.forEach(function(s, i){ order[s.id] = i; });
+  return S.classes.slice().sort(function(a, b){ return ((order[a.sec] == null ? 999 : order[a.sec]) - (order[b.sec] == null ? 999 : order[b.sec])) || C.sortCodes(a.code, b.code); });
+}
+function moneyList(a){ return (a || []).map(function(m){ return m == null ? '' : (m / 100).toFixed(2).replace(/\.00$/, ''); }).join(', '); }
+function parseMoneyList(t){
+  t = String(t || '').trim(); if(!t) return null;
+  var out = [], ok = true;
+  t.split(/[,;/\s]+/).filter(Boolean).forEach(function(x){ var m = C.parseMoney(x); if(m == null || isNaN(m)) ok = false; else out.push(m); });
+  return ok ? out : NaN;
+}
+
+/* ---------- tabs ---------- */
+function showTab(t){
+  TAB = t;
+  Array.prototype.forEach.call(document.querySelectorAll('#tabs button'), function(b){ b.setAttribute('aria-selected', b.getAttribute('data-t') === t ? 'true' : 'false'); });
+  Array.prototype.forEach.call(document.querySelectorAll('section.tab'), function(s){ s.hidden = s.id !== 't-' + t; });
+  renderTab();
+  try{ history.replaceState(null, '', location.search + '#t-' + t); }catch(e){}
+}
+function renderTab(){
+  if(TAB === 'schedule') renderSchedule();
+  if(TAB === 'entries') renderEntries();
+  if(TAB === 'cards') renderCards();
+  if(TAB === 'results') renderResults();
+  if(TAB === 'prizes') renderPrizes();
+  renderTop();
+}
+function renderTop(){
+  var o = C.compute(S), n = C.entryCount(S);
+  $('showLine').textContent = S.show.name ? S.show.name + (S.show.date ? ' · ' + niceDate(S.show.date) : '') : 'Entries, exhibit cards, prize money and cups for your show';
+  $('tally').innerHTML = '<span><b>' + S.classes.length + '</b> classes</span><span><b>' + S.exhibitors.length + '</b> exhibitors</span><span><b>' + n + '</b> entries</span>' +
+    '<span>fees <b>' + money(o.totalFees) + '</b></span>' + (o.awards.length ? '<span>prizes <b>' + money(o.totalPrize) + '</b></span>' : '');
+  $('exampleBar').hidden = !S.example;
+  if(n >= 10 && !S.example) trackOnce('ten-entries');
+}
+/* Re-rendering a table while one of its inputs has focus makes the browser fire change during removal; commit it first. */
+function flush(id){ var a = document.activeElement, el = $(id); if(a && el && el.contains(a) && a.blur) a.blur(); }
+function niceDate(d){ try{ return new Date(d + 'T12:00:00').toLocaleDateString(undefined, {day:'numeric', month:'long', year:'numeric'}); }catch(e){ return d; } }
+
+/* ---------- 1 schedule ---------- */
+function renderSchedule(){
+  flush('t-schedule');
+  var empty = !S.classes.length && !S.exhibitors.length;
+  $('welcome').hidden = !empty;
+  if(empty) $('miniCard').innerHTML = cardHTML({show: 'Little Wapping Summer Show', code: '12', title: 'Vase of sweet peas, 9 stems', no: 37, name: 'Mrs J. Smith', showName: true});
+  $('sName').value = S.show.name; $('sDate').value = S.show.date; $('sCur').value = S.show.cur;
+  $('sFee').value = (S.show.fee / 100).toFixed(2); $('sJFee').value = (S.show.juniorFee / 100).toFixed(2); $('sFirst').value = S.show.firstNo;
+  $('sNFee').value = S.show.nonMemberFee == null ? '' : (S.show.nonMemberFee / 100).toFixed(2); $('sCap').value = S.show.feeCap == null ? '' : (S.show.feeCap / 100).toFixed(2);
+  $('placesBody').innerHTML = S.show.places.map(function(p, i){
+    return '<tr><td><input type="text" data-pl="label" data-i="' + i + '" value="' + esc(p.label) + '" style="width:80px"></td>' +
+      '<td><input type="text" class="money" inputmode="decimal" data-pl="money" data-i="' + i + '" value="' + (p.money / 100).toFixed(2) + '"></td>' +
+      '<td><input type="number" class="num" min="0" data-pl="pts" data-i="' + i + '" value="' + p.pts + '"></td>' +
+      '<td>' + (i ? '<input type="checkbox" data-pl="on" data-i="' + i + '"' + (p.off ? '' : ' checked') + ' aria-label="Use ' + esc(p.label) + '">' : '') + '</td></tr>';
+  }).join('');
+  var list = sortedClasses(), last = null, html = '';
+  var secOpts = function(sel){ return '<option value="">(none)</option>' + S.sections.map(function(s){ return '<option value="' + s.id + '"' + (s.id === sel ? ' selected' : '') + '>' + esc(s.name) + '</option>'; }).join(''); };
+  list.forEach(function(c){
+    if(c.sec !== last){ last = c.sec; html += '<tr class="secHead"><td colspan="7">' + esc(secName(c.sec) || 'No section') + '</td></tr>'; }
+    html += '<tr data-c="' + c.id + '"><td data-l="Class"><input type="text" data-cf="code" value="' + esc(c.code) + '" style="width:70px"></td>' +
+      '<td class="wide" data-l="Title"><input type="text" data-cf="title" value="' + esc(c.title) + '"></td>' +
+      '<td data-l="Section"><select data-cf="sec">' + secOpts(c.sec) + '</select></td>' +
+      '<td data-l="Prize money"><input type="text" data-cf="money" placeholder="usual" value="' + esc(moneyList(c.money)) + '" style="width:120px"></td>' +
+      '<td data-l="Fee"><input type="text" data-cf="fee" class="money" placeholder="usual" value="' + (c.fee == null ? '' : (c.fee / 100).toFixed(2)) + '"></td>' +
+      '<td data-l="Junior"><input type="checkbox" data-cf="junior"' + (c.junior ? ' checked' : '') + ' aria-label="Junior class"></td>' +
+      '<td><button class="del" data-cdel="' + c.id + '" aria-label="Delete class ' + esc(c.code) + '">×</button></td></tr>';
+  });
+  $('classBody').innerHTML = html;
+  $('noClasses').hidden = !!S.classes.length;
+  $('classHead').textContent = S.classes.length ? S.classes.length + ' classes in ' + S.sections.length + ' section' + (S.sections.length === 1 ? '' : 's') : 'Classes';
+  $('secMoney').innerHTML = S.sections.length ? '<h3>Prize money by section</h3><div class="row">' + S.sections.map(function(s){
+    return '<label class="f">' + esc(s.name) + '<input type="text" data-sm="' + s.id + '" placeholder="usual" value="' + esc(moneyList(s.money)) + '" style="width:150px"></label>';
+  }).join('') + '</div><p style="font-size:15px">Leave blank to use the usual amounts. Type e.g. <b>3, 2, 1</b> for £3 / £2 / £1.</p>' : '';
+}
+function onShowField(){
+  var f = C.parseMoney($('sFee').value), j = C.parseMoney($('sJFee').value), first = parseInt($('sFirst').value, 10);
+  S.show.name = $('sName').value.trim(); S.show.date = $('sDate').value; S.show.cur = $('sCur').value;
+  if(f != null && !isNaN(f)) S.show.fee = f;
+  if(j != null && !isNaN(j)) S.show.juniorFee = j;
+  if(first > 0) S.show.firstNo = first;
+  var nf = C.parseMoney($('sNFee').value), cap = C.parseMoney($('sCap').value);
+  if(!(nf != null && isNaN(nf))) S.show.nonMemberFee = nf;
+  if(!(cap != null && isNaN(cap))) S.show.feeCap = cap;
+  touched(); save(); renderTop();
+}
+['sName','sDate','sCur','sFee','sJFee','sFirst','sNFee','sCap'].forEach(function(id){ $(id).addEventListener('change', onShowField); });
+$('placesBody').addEventListener('change', function(e){
+  var t = e.target, i = +t.getAttribute('data-i'), k = t.getAttribute('data-pl'), p = S.show.places[i]; if(!p) return;
+  if(k === 'label') p.label = t.value.trim() || p.label;
+  if(k === 'money'){ var m = C.parseMoney(t.value); if(m != null && !isNaN(m)) p.money = m; else say('Prize money: type an amount like 1.50'); }
+  if(k === 'pts') p.pts = Math.max(0, parseInt(t.value, 10) || 0);
+  if(k === 'on') p.off = !t.checked;
+  touched(); save(); renderSchedule(); renderTop();
+});
+$('readSched').addEventListener('click', function(){
+  var p = C.parseSchedule($('pasteBox').value);
+  if(!p.classes.length){ $('readMsg').innerHTML = '<span class="err">No classes found. Each class line should start with its number, like "12. Vase of sweet peas".</span>'; return; }
+  if(S.example){ S = C.blankShow(); }
+  var r = C.applySchedule(S, p);
+  touched(); track('schedule-read'); save();
+  $('readMsg').innerHTML = '<span class="ok">Added ' + r.added + ' classes in ' + p.sections.length + ' section' + (p.sections.length === 1 ? '' : 's') + '.</span>' +
+    (r.dup ? ' ' + r.dup + ' already there.' : '') + (p.skipped.length ? ' Skipped ' + p.skipped.length + ' line' + (p.skipped.length === 1 ? '' : 's') + ' that were not classes (rules, prizes, headings).' : '');
+  $('pasteBox').value = '';
+  renderSchedule(); renderTop();
+});
+$('classBody').addEventListener('change', function(e){
+  var t = e.target, tr = t.closest('tr'), id = tr && tr.getAttribute('data-c'), c = S.classes.filter(function(x){ return x.id === id; })[0]; if(!c) return;
+  var k = t.getAttribute('data-cf');
+  if(k === 'code'){ var v = t.value.trim(); if(!v || S.classes.some(function(x){ return x !== c && String(x.code).toLowerCase() === v.toLowerCase(); })){ say('Class ' + v + ' is already used.'); t.value = c.code; return; } c.code = v; }
+  if(k === 'title') c.title = t.value.trim();
+  if(k === 'sec') c.sec = t.value;
+  if(k === 'money'){ var m = parseMoneyList(t.value); if(m !== m || (typeof m === 'number' && isNaN(m))){ say('Type amounts like 5, 3, 1'); return; } c.money = m; }
+  if(k === 'fee'){ var f = C.parseMoney(t.value); if(f != null && isNaN(f)){ say('Fee: type an amount like 0.50'); return; } c.fee = f; }
+  if(k === 'junior') c.junior = t.checked;
+  touched(); save(); if(k === 'sec' || k === 'code') renderSchedule(); renderTop();
+});
+$('classBody').addEventListener('click', function(e){
+  var id = e.target.getAttribute && e.target.getAttribute('data-cdel'); if(!id) return;
+  var c = S.classes.filter(function(x){ return x.id === id; })[0]; if(!c) return;
+  var n = 0; for(var k in S.entries) n += S.entries[k].indexOf(id) >= 0 ? 1 : 0;
+  if(n && !confirm('Class ' + c.code + ' has ' + n + ' entr' + (n === 1 ? 'y' : 'ies') + '. Delete it and its entries?')) return;
+  S.classes = S.classes.filter(function(x){ return x.id !== id; });
+  for(var k2 in S.entries) S.entries[k2] = S.entries[k2].filter(function(x){ return x !== id; });
+  delete S.results[id];
+  save(); renderSchedule(); renderTop();
+});
+$('secMoney').addEventListener('change', function(e){
+  var id = e.target.getAttribute('data-sm'), s = S.sections.filter(function(x){ return x.id === id; })[0]; if(!s) return;
+  var m = parseMoneyList(e.target.value); if(typeof m === 'number' && isNaN(m)){ say('Type amounts like 3, 2, 1'); return; }
+  s.money = m; touched(); save(); renderTop();
+});
+$('addClass').addEventListener('click', function(){
+  if(S.example) S = C.blankShow();
+  var codes = S.classes.map(function(c){ return parseInt(c.code, 10) || 0; }), next = String((codes.length ? Math.max.apply(null, codes) : 0) + 1);
+  S.classes.push({id: C.nid(S, 'c'), code: next, title: '', sec: S.sections.length ? S.sections[S.sections.length - 1].id : '', money: null, fee: null, junior: false});
+  touched(); save(); renderSchedule(); renderTop();
+  var rows = document.querySelectorAll('#classBody tr[data-c]'); var last = rows[rows.length - 1]; if(last) last.querySelector('[data-cf=title]').focus();
+});
+$('goPaste').addEventListener('click', function(){ $('pastePanel').scrollIntoView({behavior:'smooth'}); $('pasteBox').focus(); });
+$('loadExample').addEventListener('click', function(){ S = exampleShow(); save(); track('example'); showTab('entries'); say('Example show loaded. Have a look round.'); });
+$('exampleClear').addEventListener('click', function(){ S = C.blankShow(); save(); showTab('schedule'); });
+
+/* ---------- 2 entries ---------- */
+function hintFor(text){
+  var r = C.parseList(text, S.classes.map(function(c){ return c.code; }));
+  var map = {}; S.classes.forEach(function(c){ map[c.code.toLowerCase()] = c; });
+  var h = r.codes.map(function(c){ var k = map[c.toLowerCase()]; return '<b>' + esc(c) + '</b> ' + esc(k.title); }).join(' · ');
+  if(r.bad.length) h += (h ? '<br>' : '') + '<span class="err">Not in the schedule: ' + esc(r.bad.join(', ')) + '</span>';
+  return h;
+}
+$('eCls').addEventListener('input', function(){ $('eHint').innerHTML = S.classes.length ? hintFor(this.value) : '<span class="err">Add the classes on step 1 first.</span>'; });
+function addExhibitor(name, text, junior){
+  var e = {id: C.nid(S, 'e'), no: C.nextNo(S), name: name, junior: !!junior, member: true, paid: false, donate: false};
+  S.exhibitors.push(e);
+  var r = C.setEntries(S, e.id, text);
+  return {e: e, r: r};
+}
+$('eAdd').addEventListener('click', function(){
+  var name = $('eName').value.trim(), text = $('eCls').value;
+  if(!S.classes.length){ say('Add the classes on step 1 first.'); return; }
+  if(!name){ say('Type the exhibitor\'s name.'); $('eName').focus(); return; }
+  if(S.example){ say('This is the example show. Click "Start my own show" first.'); return; }
+  var r = C.parseList(text, S.classes.map(function(c){ return c.code; }));
+  if(r.bad.length && !confirm('Not in the schedule: ' + r.bad.join(', ') + '. Add the rest?')) return;
+  var x = addExhibitor(name, text, $('eJun').checked);
+  touched(); trackOnce('exhibitor-added'); save();
+  $('eName').value = ''; $('eCls').value = ''; $('eJun').checked = false; $('eHint').innerHTML = '';
+  say(name + ' is exhibitor ' + x.e.no + ' with ' + x.r.codes.length + ' entr' + (x.r.codes.length === 1 ? 'y' : 'ies') + '.');
+  renderEntries(); renderTop(); $('eName').focus();
+});
+$('eCls').addEventListener('keydown', function(e){ if(e.key === 'Enter') $('eAdd').click(); });
+$('eName').addEventListener('keydown', function(e){ if(e.key === 'Enter') $('eCls').focus(); });
+$('bulkAdd').addEventListener('click', function(){
+  if(S.example){ say('This is the example show. Click "Start my own show" first.'); return; }
+  if(!S.classes.length){ say('Add the classes on step 1 first.'); return; }
+  var lines = $('bulkBox').value.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(Boolean), added = 0, problems = [];
+  lines.forEach(function(l){
+    var m = /^(.+?)\s*[:\t]\s*(.*)$/.exec(l);
+    if(!m){ problems.push(l); return; }
+    var x = addExhibitor(m[1].trim(), m[2]); added++;
+    if(x.r.bad.length) problems.push(m[1] + ': not in schedule ' + x.r.bad.join(', '));
+  });
+  if(added){ touched(); trackOnce('exhibitor-added'); save(); }
+  $('bulkMsg').innerHTML = '<span class="ok">Added ' + added + '.</span>' + (problems.length ? ' <span class="err">Check: ' + esc(problems.join('; ')) + '</span>' : '');
+  if(!problems.length) $('bulkBox').value = '';
+  renderEntries(); renderTop();
+});
+function renderEntries(){
+  flush('exBody');
+  var o = C.compute(S), q = $('exFind').value.trim().toLowerCase();
+  var list = S.exhibitors.slice().sort(function(a, b){ return a.no - b.no; }).filter(function(e){ return !q || String(e.no) === q || e.name.toLowerCase().indexOf(q) >= 0; });
+  $('exBody').innerHTML = list.map(function(e){
+    var p = o.per[e.id];
+    return '<tr data-e="' + e.id + '"><td class="n" data-l="No."><input type="number" class="num" data-ef="no" value="' + e.no + '" style="width:72px"></td>' +
+      '<td data-l="Name"><input type="text" data-ef="name" value="' + esc(e.name) + '"></td>' +
+      '<td class="wide" data-l="Classes"><input type="text" data-ef="cls" value="' + esc(C.entriesText(S, e.id)) + '"></td>' +
+      '<td class="n" data-l="Entries">' + p.entries + '</td><td class="n" data-l="Fee">' + money(p.fee) + '</td>' +
+      '<td data-l="Paid"><input type="checkbox" data-ef="paid"' + (e.paid ? ' checked' : '') + ' aria-label="Paid"></td>' +
+      '<td data-l="Junior"><input type="checkbox" data-ef="junior"' + (e.junior ? ' checked' : '') + ' aria-label="Junior"></td>' +
+      '<td data-l="Member"><input type="checkbox" data-ef="member"' + (e.member !== false ? ' checked' : '') + ' aria-label="Member"></td>' +
+      '<td data-l="Donates prizes"><input type="checkbox" data-ef="donate"' + (e.donate ? ' checked' : '') + ' aria-label="Donates prize money"></td>' +
+      '<td data-l="Groups"><input type="text" data-ef="tags" value="' + esc(e.tags || '') + '" placeholder="resident" style="width:110px"></td>' +
+      '<td><button class="del" data-edel="' + e.id + '" aria-label="Delete exhibitor ' + e.no + '">×</button></td></tr>';
+  }).join('');
+  $('noEx').hidden = !!S.exhibitors.length;
+  entriesHead(o);
+}
+function entriesHead(o){
+  var unpaid = 0; S.exhibitors.forEach(function(e){ if(!e.paid) unpaid += o.per[e.id].fee; });
+  $('exHead').textContent = S.exhibitors.length ? S.exhibitors.length + ' exhibitors · ' + o.entries + ' entries · ' + money(o.totalFees) + ' in fees' + (unpaid ? ', ' + money(unpaid) + ' not paid yet' : '') : 'Exhibitors';
+}
+$('exFind').addEventListener('input', renderEntries);
+$('exBody').addEventListener('change', function(e){
+  var t = e.target, tr = t.closest('tr'), id = tr && tr.getAttribute('data-e'), x = S.exhibitors.filter(function(y){ return y.id === id; })[0]; if(!x) return;
+  var k = t.getAttribute('data-ef');
+  if(k === 'no'){
+    var n = parseInt(t.value, 10);
+    if(!(n > 0) || S.exhibitors.some(function(y){ return y !== x && y.no === n; })){ say('Number ' + t.value + ' is already used.'); t.value = x.no; return; }
+    if(hasResults() && !confirm('Placings are typed by number. Changing ' + x.no + ' to ' + n + ' moves any placings for ' + n + ' to ' + x.name + '. Change it?')){ t.value = x.no; return; }
+    x.no = n;
+  }
+  if(k === 'name') x.name = t.value.trim();
+  if(k === 'tags') x.tags = t.value.trim();
+  if(k === 'cls'){ var r = C.setEntries(S, x.id, t.value); if(r.bad.length) say('Not in the schedule: ' + r.bad.join(', ')); t.value = C.entriesText(S, x.id); }
+  if(k === 'paid' || k === 'junior' || k === 'member' || k === 'donate') x[k] = t.checked;
+  touched(); save();
+  if(k === 'no') renderEntries(); else { var o = C.compute(S), q = o.per[x.id]; tr.querySelector('[data-l=Entries]').textContent = q.entries; tr.querySelector('[data-l=Fee]').textContent = money(q.fee); entriesHead(o); }
+  renderTop();
+});
+$('exBody').addEventListener('click', function(e){
+  var id = e.target.getAttribute && e.target.getAttribute('data-edel'); if(!id) return;
+  var x = S.exhibitors.filter(function(y){ return y.id === id; })[0]; if(!x) return;
+  if(!confirm('Delete exhibitor ' + x.no + ' (' + x.name + ') and their entries?')) return;
+  S.exhibitors = S.exhibitors.filter(function(y){ return y.id !== id; }); delete S.entries[id];
+  save(); renderEntries(); renderTop();
+});
+function hasResults(){ for(var k in S.results){ var r = S.results[k]; if(r && r.p && r.p.some(function(v){ return C.placeNos(v).length; })) return true; } return false; }
+
+/* ---------- 3 cards & sheets ---------- */
+function cardHTML(c){
+  return '<div class="ecard"><div class="sh"><span>' + esc(c.show || 'Show') + '</span><span>Entry card</span></div>' +
+    '<div class="mid"><div><div class="cl">Class<b>' + esc(c.code) + '</b></div><div class="ti">' + esc(c.title) + '</div></div>' +
+    '<div class="exn"><small>Exhibitor</small><b>' + esc(c.no) + '</b></div></div>' +
+    '<div class="fold">fold here · name faces down</div><div class="nm">' + (c.showName ? 'Name: <b>' + esc(c.name) + '</b>' : 'Name: ______________________') + '</div></div>';
+}
+function cardList(){
+  var cls = C.byId(S.classes), out = [];
+  S.exhibitors.slice().sort(function(a, b){ return a.no - b.no; }).forEach(function(e){
+    (S.entries[e.id] || []).forEach(function(cid){ var c = cls[cid]; if(c) out.push({c: c, e: e}); });
+  });
+  if($('cOrder').value === 'cls'){
+    var ord = {}; sortedClasses().forEach(function(c, i){ ord[c.id] = i; });
+    out.sort(function(a, b){ return (ord[a.c.id] - ord[b.c.id]) || (a.e.no - b.e.no); });
+  } else {
+    out.forEach(function(x){ x.k = 0; });
+    out.sort(function(a, b){ return (a.e.no - b.e.no) || C.sortCodes(a.c.code, b.c.code); });
+  }
+  return out;
+}
+function renderCards(){
+  var l = cardList();
+  var first = l[0];
+  $('cardPreview').innerHTML = first ? cardHTML({show: S.show.name, code: first.c.code, title: first.c.title, no: first.e.no, name: first.e.name, showName: $('cName').checked})
+                                     : cardHTML({show: S.show.name || 'Your show', code: '12', title: 'Vase of sweet peas', no: 37, name: 'Exhibitor', showName: false});
+  $('cardCount').innerHTML = l.length ? '<b>' + l.length + '</b> cards on <b>' + Math.ceil(l.length / 8) + '</b> page' + (Math.ceil(l.length / 8) === 1 ? '' : 's') + '.' : 'Add exhibitors on step 2 first.';
+}
+['cOrder','cName','cPaper'].forEach(function(id){ $(id).addEventListener('change', renderCards); });
+function gate(what){
+  if(!overFree()) return true;
+  track('pro-limit');
+  say(what + ': your show has ' + C.entryCount(S) + ' entries. Free covers ' + FREE_ENTRIES + '. Pro is ' + PRICE + ' once.');
+  showTab('prizes'); setTimeout(function(){ $('proSec').scrollIntoView({behavior:'smooth'}); }, 50);
+  return false;
+}
+function stamp(){ return '<div class="pa-foot">' + esc(S.show.name || 'Show') + ' · printed ' + esc(new Date().toLocaleDateString()) + ' · made with Show Secretary, samsbench.com/show-secretary</div>'; }
+function doPrint(html, paper, ev){
+  var a = $('printArea');
+  var size = paper === 'Letter' ? 'letter' : 'A4';
+  var st = '<style>@page{size:' + size + ';margin:' + (paper === 'Letter' ? '0.35in' : '8mm') + '}</style>';
+  a.innerHTML = st + html;
+  if(ev) track(ev);
+  setTimeout(function(){ window.print(); }, 60);
+}
+$('pCards').addEventListener('click', function(){
+  var l = cardList(); if(!l.length){ say('No entries yet.'); return; }
+  if(!gate('Printing cards')) return;
+  var paper = $('cPaper').value, ch = paper === 'Letter' ? '2.55in' : '69mm', name = $('cName').checked, html = '';
+  for(var i = 0; i < l.length; i += 8){
+    html += '<div class="cards' + (i + 8 < l.length ? ' pbreak' : '') + '" style="--ch:' + ch + '">' + l.slice(i, i + 8).map(function(x){
+      return cardHTML({show: S.show.name, code: x.c.code, title: x.c.title, no: x.e.no, name: x.e.name, showName: name});
+    }).join('') + '</div>';
+  }
+  if(!S.example && l.length >= 10) track('real-cards');
+  doPrint(html + stamp(), paper, 'print-cards');
+});
+$('pReceipts').addEventListener('click', function(){
+  if(!S.exhibitors.length){ say('No exhibitors yet.'); return; }
+  if(!gate('Printing receipts')) return;
+  var o = C.compute(S), cls = C.byId(S.classes);
+  var html = '<div class="slips">' + S.exhibitors.slice().sort(function(a, b){ return a.no - b.no; }).map(function(e){
+    var p = o.per[e.id];
+    var lines = (S.entries[e.id] || []).filter(function(id){ return cls[id]; }).map(function(id){ return esc(cls[id].code) + ' ' + esc(cls[id].title); }).join('<br>');
+    return '<div class="slip"><b>' + esc(S.show.name || 'Show') + '</b><br>Exhibitor <span class="amt">' + e.no + '</span> ' + esc(e.name) + '<br>' + lines +
+      '<br><b>' + p.entries + ' entries · fee ' + money(p.fee) + (e.paid ? ' · paid' : ' · to pay') + '</b></div>';
+  }).join('') + '</div>';
+  doPrint(html + stamp(), $('cPaper').value, 'print-receipts');
+});
+$('pSheets').addEventListener('click', function(){
+  if(!S.classes.length){ say('No classes yet.'); return; }
+  if(!gate('Printing judges\' sheets')) return;
+  var o = C.compute(S), exs = C.byId(S.exhibitors), on = C.placesOn(S), last = null, html = '<div class="sheet">';
+  html += '<h2>' + esc(S.show.name || 'Show') + ' · judges\' sheet</h2><table><thead><tr><th>Class</th><th>Title</th><th>Exhibitors on the bench</th>' +
+    on.map(function(p){ return '<th style="width:16mm">' + esc(p.label) + '</th>'; }).join('') + '</tr></thead><tbody>';
+  sortedClasses().forEach(function(c){
+    if(c.sec !== last){ last = c.sec; html += '<tr><td colspan="' + (3 + on.length) + '"><b>' + esc(secName(c.sec) || '') + '</b></td></tr>'; }
+    var nos = (o.classEntries[c.id] || []).map(function(id){ return exs[id].no; }).sort(function(a, b){ return a - b; });
+    html += '<tr><td><b>' + esc(c.code) + '</b></td><td>' + esc(c.title) + '</td><td>' + (nos.length ? nos.join(', ') + ' (' + nos.length + ')' : 'no entries') + '</td>' + on.map(function(){ return '<td></td>'; }).join('') + '</tr>';
+  });
+  html += '</tbody></table></div>';
+  doPrint(html + stamp(), $('cPaper').value, 'print-sheets');
+});
+
+/* ---------- 4 results ---------- */
+function renderResults(){
+  flush('rList');
+  var sel = $('rSec'), cur0 = sel.value;
+  sel.innerHTML = '<option value="">All sections</option>' + S.sections.map(function(s){ return '<option value="' + s.id + '">' + esc(s.name) + '</option>'; }).join('');
+  sel.value = S.sections.some(function(s){ return s.id === cur0; }) ? cur0 : '';
+  var o = C.compute(S), places = S.show.places, exByNo = {};
+  S.exhibitors.forEach(function(e){ exByNo[e.no] = e; });
+  var idx = []; places.forEach(function(p, i){ if(!p.off) idx.push(i); });
+  var list = sortedClasses().filter(function(c){ return !sel.value || c.sec === sel.value; });
+  $('rList').style.setProperty('--places', idx.length);
+  $('rList').innerHTML = list.length ? list.map(function(c){
+    var r = S.results[c.id] || {p: []}, n = (o.classEntries[c.id] || []).length;
+    return '<div class="rrow' + (r.none ? ' none' : '') + '" data-c="' + c.id + '" style="--places:' + idx.length + '"><div class="ct"><b>' + esc(c.code) + '</b>' + esc(c.title) + '<small>' + n + ' entr' + (n === 1 ? 'y' : 'ies') + ' · ' + esc(secName(c.sec)) + '</small></div>' +
+      idx.map(function(i){
+        var v = r.p && r.p[i] != null ? r.p[i] : '';
+        return '<div class="pbox p' + i + '"><input type="text" inputmode="text" data-pi="' + i + '" value="' + esc(Array.isArray(v) ? v.join('=') : v) + '" aria-label="Class ' + esc(c.code) + ' ' + esc(places[i].label) + '" placeholder="' + esc(places[i].label) + '"' + (r.none ? ' disabled' : '') + '><span class="who">' + whoHTML(v) + '</span></div>';
+      }).join('') + '<label class="na"><input type="checkbox" data-none' + (r.none ? ' checked' : '') + '>No award</label></div>';
+  }).join('') : '<p>No classes yet.</p>';
+  renderWarn(o);
+}
+function whoHTML(v){
+  var nos = C.placeNos(v); if(!nos.length) return '';
+  return (nos.length > 1 ? 'equal: ' : '') + nos.map(function(n){ var e = S.exhibitors.filter(function(x){ return x.no === n; })[0]; return e ? esc(e.name) : '<span class="err">' + n + ' not on list</span>'; }).join(' = ');
+}
+function renderWarn(o){
+  o = o || C.compute(S);
+  $('rWarn').innerHTML = o.warn.length ? '<div class="warnbox"><b>Check ' + o.warn.length + ' thing' + (o.warn.length === 1 ? '' : 's') + ':</b><ul>' + o.warn.slice(0, 12).map(function(w){ return '<li>' + esc(w.msg) + '</li>'; }).join('') + (o.warn.length > 12 ? '<li>…and ' + (o.warn.length - 12) + ' more</li>' : '') + '</ul></div>' : '';
+}
+$('rSec').addEventListener('change', renderResults);
+$('rList').addEventListener('change', function(e){
+  var t = e.target, row = t.closest('.rrow'), id = row && row.getAttribute('data-c'); if(!id) return;
+  var r = S.results[id] = S.results[id] || {p: []};
+  if(t.hasAttribute('data-none')){ r.none = t.checked; save(); renderResults(); renderTop(); return; }
+  var i = +t.getAttribute('data-pi'), v = t.value.trim().replace(/#/g, '');
+  var parts = v === '' ? [] : v.split(/\s*(?:=|,|&|\s)\s*/).filter(Boolean);
+  if(parts.some(function(x){ return !/^\d{1,5}$/.test(x); })){ say('Type the exhibitor number, like 37. For an equal place: 12=15.'); t.value = Array.isArray(r.p[i]) ? r.p[i].join('=') : (r.p[i] == null ? '' : r.p[i]); return; }
+  while(r.p.length <= i) r.p.push('');
+  r.p[i] = !parts.length ? '' : parts.length === 1 ? parseInt(parts[0], 10) : parts.map(Number);
+  t.value = Array.isArray(r.p[i]) ? r.p[i].join('=') : (r.p[i] === '' ? '' : r.p[i]);
+  t.parentNode.querySelector('.who').innerHTML = whoHTML(r.p[i]);
+  if(v !== '' && !S.example) trackOnce('result-entered');
+  touched(); save(); renderWarn(); renderTop();
+});
+$('rList').addEventListener('keydown', function(e){
+  if(e.key !== 'Enter' || !e.target.hasAttribute('data-pi')) return;
+  e.preventDefault();
+  var all = Array.prototype.slice.call(document.querySelectorAll('#rList input[data-pi]:not([disabled])')), k = all.indexOf(e.target);
+  e.target.dispatchEvent(new Event('change', {bubbles: true}));
+  if(all[k + 1]) all[k + 1].focus();
+});
+$('rGo').addEventListener('change', function(){
+  var v = this.value.trim().toLowerCase(), c = S.classes.filter(function(x){ return String(x.code).toLowerCase() === v; })[0];
+  if(!c){ say('No class ' + this.value); return; }
+  if($('rSec').value && $('rSec').value !== c.sec){ $('rSec').value = ''; renderResults(); }
+  var row = document.querySelector('#rList .rrow[data-c="' + c.id + '"]');
+  if(row){ row.scrollIntoView({block:'center'}); var inp = row.querySelector('input[data-pi]'); if(inp) inp.focus(); }
+  this.value = '';
+});
+
+/* ---------- 5 prizes, cups, results text ---------- */
+function renderPrizes(){
+  flush('cupList');
+  var o = C.compute(S), locked = overFree();
+  $('payTotal').textContent = money(o.payout); $('payEnv').textContent = o.envelopes.length; $('payDon').textContent = money(o.donated); $('payMax').textContent = money(o.maxPrize);
+  var fl = C.floatFor(o.envelopes.map(function(q){ return q.prize; }), cur()), keys = Object.keys(fl.counts).map(Number).sort(function(a, b){ return b - a; });
+  $('coinList').innerHTML = locked ? '<span>Pro shows the coins for a show this size</span>' : keys.length ? keys.map(function(d){ return '<span><b>' + fl.counts[d] + '</b> × ' + money(d) + '</span>'; }).join('') + (fl.rest ? '<span class="err">' + money(fl.rest) + ' can\'t be made in coins</span>' : '') : '<span>Nothing yet: type placings on step 4.</span>';
+  // cups
+  $('noCups').hidden = !!S.trophies.length;
+  $('cupList').innerHTML = o.trophies.map(function(r){ return cupHTML(r, locked); }).join('');
+  renderResText(o, locked);
+  renderPro();
+}
+var KIND = {points: 'Most points', money: 'Most prize money', 'class': 'Winner of one class', pick: 'Judges\' choice (pick the winner)'};
+function cupHTML(r, locked){
+  var t = r.t, win;
+  if(locked) win = '<div class="win">—</div><div class="why">Pro works out the winners for a show this size.</div>';
+  else if(r.winners.length){
+    win = '<div class="win">' + r.winners.map(function(e){ return esc(e.name) + ' (' + e.no + ')'; }).join(' &amp; ') + '</div>';
+    var unit = t.kind === 'money' ? money : function(x){ return (Math.round(x * 100) / 100) + ' pts'; };
+    if(r.table.length) win += '<div class="why">' + unit(r.table[0].score) + (r.tie ? (r.tieBroken ? ' · tie broken on most ' + esc(S.show.places[0].label) + ' places' : (t.tie === 'share' ? ' · shared' : ' · <span class="err">still tied after counting 1sts, 2nds, 3rds: the committee decides</span>')) : '') + '</div>';
+  } else win = '<div class="win">—</div><div class="why">' + esc(r.note || 'No winner yet.') + '</div>';
+  var table = (!locked && r.table.length) ? '<details><summary>Full table</summary><table class="tbl">' + r.table.slice(0, 15).map(function(x){
+    return '<tr><td>' + x.ex.no + '</td><td>' + esc(x.ex.name) + '</td><td class="n">' + (t.kind === 'money' ? money(x.score) : x.score) + '</td><td>' + x.places.map(function(n, i){ return n ? n + '×' + esc(S.show.places[i].label) : ''; }).filter(Boolean).join(' ') + '</td></tr>';
+  }).join('') + '</table></details>' : '';
+  var secChips = S.sections.map(function(s){ return '<label><input type="checkbox" data-tsec="' + s.id + '"' + ((t.sections || []).indexOf(s.id) >= 0 ? ' checked' : '') + '>' + esc(s.name) + '</label>'; }).join('');
+  var clsOpts = sortedClasses().map(function(c){ return '<option value="' + c.id + '"' + (t.cls === c.id ? ' selected' : '') + '>' + esc(c.code + ' ' + c.title) + '</option>'; }).join('');
+  var exOpts = '<option value="">(pick)</option>' + S.exhibitors.slice().sort(function(a, b){ return a.no - b.no; }).map(function(e){ return '<option value="' + e.id + '"' + (t.pick === e.id ? ' selected' : '') + '>' + e.no + ' ' + esc(e.name) + '</option>'; }).join('');
+  var cfg = '<div class="cfg">' +
+    '<label class="f">How it is won<select data-tf="kind">' + Object.keys(KIND).map(function(k){ return '<option value="' + k + '"' + (t.kind === k ? ' selected' : '') + '>' + KIND[k] + '</option>'; }).join('') + '</select></label>' +
+    (t.kind === 'points' || t.kind === 'money' ? '<div><b style="font-size:15px">Counting</b> <small>(none ticked = whole show)</small><div class="chips">' + secChips + '</div></div>' +
+      '<label class="f">…or these classes <small>e.g. 1-12, 20</small><input type="text" data-tf="classes" value="' + esc(t.classes || '') + '"></label>' +
+      '<label class="f">If tied<select data-tf="tie"><option value="firsts"' + (t.tie !== 'share' ? ' selected' : '') + '>Most 1sts, then 2nds, then 3rds</option><option value="share"' + (t.tie === 'share' ? ' selected' : '') + '>Shared</option></select></label>' : '') +
+    (t.kind === 'class' ? '<label class="f">Class<select data-tf="cls"><option value="">(choose)</option>' + clsOpts + '</select></label>' : '') +
+    (t.kind === 'pick' ? '<label class="f">Winner<select data-tf="pick">' + exOpts + '</select></label><label class="f">For <small>(which exhibit)</small><input type="text" data-tf="pickNote" value="' + esc(t.pickNote || '') + '"></label>' : '') +
+    '<div class="chips"><label><input type="checkbox" data-tf="junior"' + (t.junior ? ' checked' : '') + '>Juniors only</label><label><input type="checkbox" data-tf="members"' + (t.members ? ' checked' : '') + '>Members only</label></div>' +
+    '<label class="f">Only for a group <small>(matches "Groups" on step 2, e.g. resident, novice)</small><input type="text" data-tf="group" value="' + esc(t.group || '') + '"></label>' +
+    (t.kind !== 'pick' ? '<label class="f">Can\'t win it <small>(exhibitor numbers, e.g. last year\'s winner)</small><input type="text" data-tf="exclude" value="' + esc(excludeText(t)) + '"></label>' : '') +
+    '<button class="linkbtn" data-tdel style="align-self:flex-start;color:var(--bad)">Remove this cup</button></div>';
+  return '<div class="cup" data-t="' + t.id + '"><input type="text" data-tf="name" value="' + esc(t.name) + '" aria-label="Cup name" style="width:100%;font-weight:700">' + win + table +
+    '<details' + (t.fresh ? ' open' : '') + '><summary>Rules</summary>' + cfg + '</details></div>';
+}
+function excludeText(t){ var exs = C.byId(S.exhibitors); return (t.exclude || []).map(function(id){ return exs[id] ? exs[id].no : ''; }).filter(Boolean).join(', '); }
+$('addCup').addEventListener('click', function(){
+  if(S.example){ say('This is the example show.'); }
+  S.trophies.forEach(function(t){ delete t.fresh; });
+  S.trophies.push({id: C.nid(S, 't'), name: 'New cup', kind: 'points', sections: [], classes: '', tie: 'firsts', fresh: true});
+  touched(); trackOnce('cup-added'); save(); renderPrizes();
+  var last = document.querySelector('#cupList .cup:last-child input[data-tf=name]'); if(last){ last.focus(); last.select(); }
+});
+$('cupList').addEventListener('change', function(e){
+  var t = e.target, box = t.closest('.cup'), id = box && box.getAttribute('data-t'), cup = S.trophies.filter(function(x){ return x.id === id; })[0]; if(!cup) return;
+  S.trophies.forEach(function(x){ delete x.fresh; }); cup.fresh = true;
+  var k = t.getAttribute('data-tf'), s = t.getAttribute('data-tsec');
+  if(s){ cup.sections = cup.sections || []; if(t.checked){ if(cup.sections.indexOf(s) < 0) cup.sections.push(s); } else cup.sections = cup.sections.filter(function(x){ return x !== s; }); }
+  else if(k === 'junior' || k === 'members') cup[k] = t.checked;
+  else if(k === 'exclude'){
+    var nos = (t.value.match(/\d+/g) || []).map(Number), ids = [];
+    nos.forEach(function(n){ var ex = S.exhibitors.filter(function(x){ return x.no === n; })[0]; if(ex) ids.push(ex.id); else say('No exhibitor ' + n); });
+    cup.exclude = ids;
+  }
+  else if(k) cup[k] = t.value;
+  touched(); save(); renderPrizes();
+});
+$('cupList').addEventListener('click', function(e){
+  if(!e.target.hasAttribute('data-tdel')) return;
+  var id = e.target.closest('.cup').getAttribute('data-t'), cup = S.trophies.filter(function(x){ return x.id === id; })[0];
+  if(!cup || !confirm('Remove "' + cup.name + '"?')) return;
+  S.trophies = S.trophies.filter(function(x){ return x.id !== id; }); save(); renderPrizes();
+});
+function nm(e){
+  if(!e) return '';
+  var st = $('nmStyle').value;
+  if(st === 'no') return 'No. ' + e.no;
+  if(st === 'init'){ var w = e.name.replace(/^(mr|mrs|ms|miss|dr|rev)\.?\s+/i, '').split(/\s+/); return w.length > 1 ? w[0].charAt(0).toUpperCase() + '. ' + w.slice(1).join(' ') : e.name; }
+  return e.name;
+}
+function resultsText(o){
+  var by = {}; o.awards.forEach(function(a){ var w = by[a.cls.id] = by[a.cls.id] || []; (w[a.place] = w[a.place] || []).push(a.ex); });
+  var lines = [(S.show.name || 'Show') + ' results' + (S.show.date ? ', ' + niceDate(S.show.date) : ''), ''], last = null;
+  sortedClasses().forEach(function(c){
+    var w = by[c.id]; if(!w) return;
+    if(c.sec !== last){ last = c.sec; lines.push(''); lines.push((secName(c.sec) || '').toUpperCase()); }
+    lines.push(c.code + ' ' + c.title + ': ' + w.map(function(list, i){ return list ? (list.length > 1 ? 'equal ' : '') + S.show.places[i].label + ' ' + list.map(nm).join(' & ') : ''; }).filter(Boolean).join(', '));
+  });
+  var cups = o.trophies.filter(function(r){ return r.winners.length; });
+  if(cups.length){ lines.push(''); lines.push('CUPS AND TROPHIES'); cups.forEach(function(r){ lines.push(r.t.name + ': ' + r.winners.map(nm).join(' & ') + (r.t.kind === 'pick' && r.t.pickNote ? ' (' + r.t.pickNote + ')' : '')); }); }
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+function renderResText(o, locked){ $('resText').value = locked ? 'Pro writes up the results for a show this size.' : o.awards.length ? resultsText(o) : 'Type placings on step 4 and the results appear here.'; }
+$('nmStyle').addEventListener('change', function(){ renderResText(C.compute(S), overFree()); });
+$('copyRes').addEventListener('click', function(){
+  if(!gate('Results')) return;
+  var t = $('resText').value;
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function(){ say('Copied. Paste it into your newsletter or website.'); }, function(){ $('resText').select(); document.execCommand('copy'); say('Copied.'); });
+  track('copy-results');
+});
+$('pRes').addEventListener('click', function(){
+  if(!gate('Results')) return;
+  doPrint('<div class="sheet"><pre style="font:11pt/1.45 Georgia,serif;white-space:pre-wrap">' + esc(resultsText(C.compute(S))) + '</pre></div>' + stamp(), 'A4', 'print-results');
+});
+$('pEnv').addEventListener('click', function(){
+  var o = C.compute(S); if(!o.envelopes.length){ say('No prize money yet. Type placings on step 4.'); return; }
+  if(!gate('Envelope slips')) return;
+  var html = '<div class="slips">' + o.envelopes.sort(function(a, b){ return a.ex.no - b.ex.no; }).map(function(q){
+    return '<div class="slip">' + esc(S.show.name || 'Show') + ' · prize money<br>Exhibitor <b>' + q.ex.no + '</b> ' + esc(q.ex.name) + '<div class="amt">' + money(q.prize) + '</div>' +
+      q.wins.map(function(a){ return 'Class ' + esc(a.cls.code) + ' ' + (a.equal ? 'equal ' : '') + esc(S.show.places[a.place].label) + ' ' + money(a.money); }).join('<br>') + '</div>';
+  }).join('') + '</div>';
+  doPrint(html + stamp(), $('cPaper').value, 'print-envelopes');
+});
+$('pPay').addEventListener('click', function(){
+  var o = C.compute(S); if(!o.awards.length){ say('No placings yet.'); return; }
+  if(!gate('Pay-out sheet')) return;
+  var rows = S.exhibitors.slice().sort(function(a, b){ return a.no - b.no; }).map(function(e){ return o.per[e.id]; }).filter(function(q){ return q.prize > 0; });
+  var html = '<div class="sheet"><h2>' + esc(S.show.name || 'Show') + ' · prize money</h2><table><thead><tr><th>No.</th><th>Name</th><th>Places</th><th>Amount</th><th>Signed / donated</th></tr></thead><tbody>' +
+    rows.map(function(q){ return '<tr><td>' + q.ex.no + '</td><td>' + esc(q.ex.name) + '</td><td>' + q.places.map(function(n, i){ return n ? n + '×' + esc(S.show.places[i].label) : ''; }).filter(Boolean).join(' ') + '</td><td>' + money(q.prize) + '</td><td>' + (q.ex.donate ? 'donated' : '') + '</td></tr>'; }).join('') +
+    '</tbody></table><p>Total ' + money(o.totalPrize) + ' · donated ' + money(o.donated) + ' · paid out ' + money(o.payout) + ' · entry fees taken ' + money(o.totalFees) + '</p></div>';
+  doPrint(html + stamp(), 'A4', 'print-payout');
+});
+
+/* ---------- files ---------- */
+$('saveFile').addEventListener('click', function(){
+  var b = new Blob([JSON.stringify(S, null, 1)], {type: 'application/json'}), a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = (S.show.name || 'show').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase() + '-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  track('backup-save');
+});
+$('loadFile').addEventListener('change', function(){
+  var f = this.files && this.files[0]; if(!f) return;
+  var rd = new FileReader();
+  rd.onload = function(){
+    try{
+      var o = JSON.parse(rd.result);
+      if(!o || !o.show || !Array.isArray(o.classes)) throw new Error('not a show');
+      if((S.classes.length || S.exhibitors.length) && !S.example && !confirm('Replace the show in this browser with "' + (o.show.name || 'the file') + '"?')) return;
+      S = clean(o); save(); track('backup-load'); showTab('schedule'); say('Show opened.');
+    }catch(e){ say('That file is not a Show Secretary file.'); }
+  };
+  rd.readAsText(f); this.value = '';
+});
+$('nextYear').addEventListener('click', function(){
+  if(!confirm('Keep the classes, prize money and cups, and clear all exhibitors, entries and placings? Save a show file first if you want to keep this year.')) return;
+  S.exhibitors = []; S.entries = {}; S.results = {}; S.example = false;
+  S.trophies.forEach(function(t){ delete t.pick; delete t.pickNote; t.exclude = []; });
+  S.show.date = ''; save(); showTab('entries'); say('Ready for next year.');
+});
+
+/* ---------- Pro ---------- */
+function buyUrl(){ var a = (new URLSearchParams(location.search).get('a') || '').replace(/[^A-Za-z0-9_-]/g, ''); return a ? CHECKOUT_PLAN + '?a=' + encodeURIComponent(a) : CHECKOUT_HOME; }
+function renderPro(){
+  $('buyLink').href = buyUrl(); $('proPrice').textContent = PRICE;
+  if(isPro()){ $('proBuy').hidden = true; $('proState').innerHTML = '<p class="ok">Pro is on in this browser' + (PRO.email ? ' (' + esc(PRO.email) + ')' : '') + '. Thank you.</p><p>On another computer, enter the same email or code.</p>'; }
+  else { $('proBuy').hidden = false; $('proState').innerHTML = /[?&]bought=1/.test(location.search) ? '<p class="ok">Thanks for buying! Enter the email you paid with to unlock.</p>' : ''; }
+}
+$('buyLink').addEventListener('click', function(){ track('buy-click'); });
+function sha256hex(s){ return crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)).then(function(buf){ return Array.prototype.map.call(new Uint8Array(buf), function(b){ return ('0' + b.toString(16)).slice(-2); }).join(''); }); }
+var unlocking = false;
+function unlock(){
+  var v = $('proKey').value.trim(), msg = $('proMsg');
+  if(unlocking) return;
+  if(!v){ msg.innerHTML = '<span class="err">Type the email you paid with, or your gift code.</span>'; return; }
+  if(v.indexOf('@') < 0){
+    if(!window.crypto || !crypto.subtle){ msg.innerHTML = '<span class="err">This browser can\'t check codes. Try another browser.</span>'; return; }
+    sha256hex(v.toUpperCase().replace(/\s+/g, '')).then(function(hx){
+      if(GIFT.indexOf(hx) >= 0){ PRO = {gift: hx.slice(0, 12)}; lsSet(PROKEY, PRO); track('pro-gift'); track('gift-' + hx.slice(0, 8)); msg.textContent = ''; renderTab(); say('Pro unlocked. Enjoy the show!'); }
+      else msg.innerHTML = '<span class="err">That code didn\'t match. Check the letters, or use the email you paid with.</span>';
+    });
+    return;
+  }
+  unlocking = true; msg.textContent = 'Checking…';
+  fetch(VERIFY_URL, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({app: APP_KEY, email: v})})
+    .then(function(r){ if(!r.ok) throw new Error('http ' + r.status); return r.json(); })
+    .then(function(j){
+      unlocking = false;
+      if(j && j.ok && j.valid){ PRO = {email: v.toLowerCase()}; lsSet(PROKEY, PRO); track('pro-unlocked'); msg.textContent = ''; renderTab(); say('Pro unlocked. Thank you!'); }
+      else if(j && j.ok){ track('pro-notfound'); msg.innerHTML = '<span class="err">No purchase found for that email. Use the email you typed at checkout. Just paid? Wait a minute and try again.</span>'; }
+      else throw new Error('bad reply');
+    }).catch(function(){ unlocking = false; msg.innerHTML = '<span class="err">Couldn\'t reach the checker. Check your connection and try again.</span>'; });
+}
+$('proGo').addEventListener('click', unlock);
+$('proKey').addEventListener('keydown', function(e){ if(e.key === 'Enter') unlock(); });
+
+/* ---------- example show (clearly marked; can't be mixed with real entries) ---------- */
+function exampleShow(){
+  var X = C.blankShow(); X.example = true;
+  X.show.name = 'Little Wapping Summer Show'; X.show.date = new Date().getFullYear() + '-08-30';
+  C.applySchedule(X, C.parseSchedule('SECTION A – VEGETABLES\n1. Three potatoes, one variety\n2. Five runner beans\n3. Heaviest marrow\n4. Collection of three kinds of vegetable\nSECTION B – FLOWERS\n5. Vase of sweet peas, 9 stems\n6. Three dahlias, any type\n7. One rose, specimen bloom\nSECTION C – COOKERY\n8. Victoria sandwich\n9. Jar of strawberry jam\nJUNIOR SECTION\n10. Animal made from vegetables\n11. Decorated biscuit'));
+  X.classes.filter(function(c){ return c.code === '4'; })[0].money = [400, 300, 200];
+  var people = [['Mrs J. Smith', '1, 2, 5, 8'], ['Tom Allcock', '1-4'], ['Rita Patel', '5, 6, 7, 9'], ['Bill Hartley', '1, 3, 4, 6'], ['Ann Pike', '8, 9, 2'], ['Sam Pike', '10, 11', 1], ['Jean Moss', '5, 7, 8, 9']];
+  people.forEach(function(p){ var e = {id: C.nid(X, 'e'), no: C.nextNo(X), name: p[0], junior: !!p[2], member: true, paid: true}; X.exhibitors.push(e); C.setEntries(X, e.id, p[1]); });
+  var res = {'1': [2, 4, 1], '2': [5, 1, 2], '3': [4, 2], '4': [2, 4], '5': [3, 7, 1], '6': [4, 3], '7': [7, 3], '8': [7, 1, 5], '9': [5, 3, 7], '10': [6], '11': [6]};
+  X.classes.forEach(function(c){ if(res[c.code]) X.results[c.id] = {p: res[c.code]}; });
+  var sec = function(n){ return X.sections.filter(function(s){ return s.name === n; })[0].id; };
+  X.trophies = [
+    {id: C.nid(X, 't'), name: 'Hartley Vegetable Cup', kind: 'points', sections: [sec('Vegetables')], tie: 'firsts'},
+    {id: C.nid(X, 't'), name: 'Rose Bowl (flowers)', kind: 'points', sections: [sec('Flowers')], tie: 'firsts'},
+    {id: C.nid(X, 't'), name: 'RHS Banksian Medal', kind: 'points', sections: [sec('Vegetables'), sec('Flowers')], tie: 'firsts'},
+    {id: C.nid(X, 't'), name: 'Junior Shield', kind: 'points', junior: true, tie: 'share'},
+    {id: C.nid(X, 't'), name: 'Best in Show', kind: 'pick', pick: X.exhibitors[6].id, pickNote: 'Class 7, rose'}
+  ];
+  return X;
+}
+
+/* ---------- start ---------- */
+Array.prototype.forEach.call(document.querySelectorAll('#tabs button'), function(b){ b.addEventListener('click', function(){ showTab(b.getAttribute('data-t')); }); });
+$('freeN').textContent = FREE_ENTRIES; Array.prototype.forEach.call(document.querySelectorAll('.freeN2'), function(x){ x.textContent = FREE_ENTRIES; });
+var h = (location.hash || '').replace('#t-', '');
+var q0 = new URLSearchParams(location.search);
+if(q0.get('bought') === '1' || h === 'proSec') h = 'prizes';
+showTab(['schedule','entries','cards','results','prizes'].indexOf(h) >= 0 ? h : (S.exhibitors.length ? 'entries' : 'schedule'));
+if(q0.get('bought') === '1' && !isPro()) setTimeout(function(){ $('proSec').scrollIntoView(); $('proKey').focus(); }, 400);
+try{ var seenPro = false; new IntersectionObserver(function(es){ es.forEach(function(x){ if(x.isIntersecting && !seenPro && !isPro()){ seenPro = true; track('pro-view'); } }); }).observe($('proSec')); }catch(e){}
+if(GC_CODE){ var gs = document.createElement('script'); gs.async = true; gs.src = '//gc.zgo.at/count.js'; gs.setAttribute('data-goatcounter', 'https://' + GC_CODE + '.goatcounter.com/count'); document.head.appendChild(gs); }
+(function(){
+  var via = (q0.get('via') || '').replace(/[^a-z0-9-]/g, '').slice(0, 20), af = (q0.get('a') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+  if(via) track('via-' + via);
+  if(af) track('aff-' + af);
+  if(hadData && (S.exhibitors.length || S.classes.length) && !S.example) track('return-visit');
+  if(SELFTEST && q0.get('fire') === 'all'){
+    Object.keys(FUNNEL_EV).concat(['pro-notfound', 'backup-save', 'backup-load', 'gift-selftest']).forEach(function(n){ track(n); });
+  }
+})();
+window.SSS = {state: function(){ return S; }, compute: function(){ return C.compute(S); }, pending: function(){ return QUEUE.length + (SENDING ? 1 : 0); }, queue: function(){ return QUEUE.slice(); }};
+})();
+</script>
+</body>
+</html>
