@@ -143,6 +143,9 @@ textarea{width:100%;min-height:170px;font-size:16px;line-height:1.4}
 .pro .price{font-family:"Young Serif",Georgia,serif;font-size:30px}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;z-index:20;max-width:92vw;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
+.share{margin:8px 0 16px;padding:14px 16px;border:1px dashed var(--tent);border-radius:var(--r)}
+.share p{margin:0 0 10px}
+#shareMsg{font-size:15px;color:var(--soft);word-break:break-all}
 footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);font-size:15px}
 
 #printArea{display:none}
@@ -368,8 +371,12 @@ footer{max-width:1120px;margin:0 auto;padding:10px 16px 40px;color:var(--soft);f
     <div id="proMsg" style="margin-top:6px"></div>
   </div>
 </section>
+<section class="share" id="shareSec">
+  <p><b>Know the secretary of another show?</b> Send them the tool. It works the same for their show, and their exhibitors' names stay on their computer.</p>
+  <button class="btn ghost" id="bShare">Copy a link to send them</button> <span id="shareMsg" class="muted"></span>
+</section>
 </main>
-<footer>Show Secretary is a small tool made by one person. Your data never leaves this browser unless you save a file. <a href="#t-prizes" id="footPro">Pro</a></footer>
+<footer>Show Secretary is a small tool made by one person, part of <a href="https://samsbench.com/">samsbench</a>. Your data never leaves this browser unless you save a file. <a href="#t-prizes" id="footPro">Pro</a></footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="printArea"></div>
 
@@ -814,15 +821,36 @@ var KEY = 'sss.v1', PROKEY = 'sss.pro', FREE_ENTRIES = 60;
 /* ---------- measurement (GoatCounter). ?via follows the visitor down the funnel; hits leave 700 ms apart (limit 4/s per IP+UA),
    the first one 1.5 s after count.js loads (its own pageview goes first). Pattern from Handbell Chart. ---------- */
 var GC_CODE = 'showsecretary';
-var SRC = (function(){ try{
-  var q = new URLSearchParams(location.search), v = (q.get('via') || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 20) || (q.get('a') ? 'aff' : '');
-  if(v){ localStorage.setItem('sss.src', JSON.stringify({v: v, t: Date.now()})); return v; }
-  var o = JSON.parse(localStorage.getItem('sss.src') || 'null');
-  return (o && Date.now() - o.t < 60 * 864e5) ? o.v : '';
-}catch(e){ return ''; } })();
+/* Letters (FACTORY 7, 11-25): each recipient has their own code ssNNN, and ssNNN-s is the link they pass on. The landing event keeps
+   the personal code (via-ss012 / via-ss012-s, the ledger counts letters by it); funnel events use the group (.ssmail / .ssshare) so a
+   test stays one row. A browser that came in on ss012 and then opens ss012-s is the recipient checking their own link: no via-ss012-s. */
+var VIA_EV = '';
+function viaGroup(v){ var m = /^ss(\d{3})(-s)?$/.exec(v); return m ? (m[2] ? 'ssshare' : 'ssmail') : v; }
+var SRC = (function(){
+  var v = '';
+  try{ v = (new URLSearchParams(location.search).get('via') || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 20); }catch(e){}
+  VIA_EV = v;
+  try{
+    var m = /^ss(\d{3})(-s)?$/.exec(v), seen = JSON.parse(localStorage.getItem('sss.vias') || '[]');
+    if(!Array.isArray(seen)) seen = [];
+    if(m && !m[2] && seen.indexOf(v) < 0){ seen.push(v); localStorage.setItem('sss.vias', JSON.stringify(seen.slice(-20))); }
+    if(m && m[2] && seen.indexOf('ss' + m[1]) >= 0){ VIA_EV = ''; v = 'ss' + m[1]; }   // their own pass-on link: still their own visit
+  }catch(e){}
+  try{
+    if(!v && new URLSearchParams(location.search).get('a')) v = 'aff';
+    if(v){ localStorage.setItem('sss.src', JSON.stringify({v: v, t: Date.now()})); return viaGroup(v); }
+    var o = JSON.parse(localStorage.getItem('sss.src') || 'null');
+    return (o && Date.now() - o.t < 60 * 864e5) ? viaGroup(String(o.v)) : '';
+  }catch(e){ return viaGroup(v); }
+})();
+/* the link someone passes on carries their own letter code + "-s", so the ledger can see who spread it */
+function shareLink(){
+  var own = ''; try{ var seen = JSON.parse(localStorage.getItem('sss.vias') || '[]'); if(Array.isArray(seen) && seen.length) own = String(seen[seen.length - 1]); }catch(e){}
+  return SITE + '?via=' + (/^ss\d{3}$/.test(own) ? own + '-s' : 'share');
+}
 var FUNNEL_EV = {'tool-start':1, 'example':1, 'schedule-read':1, 'exhibitor-added':1, 'ten-entries':1, 'print-cards':1, 'real-cards':1, 'print-receipts':1, 'print-sheets':1,
                  'result-entered':1, 'print-envelopes':1, 'print-payout':1, 'copy-results':1, 'print-results':1, 'cup-added':1, 'return-visit':1,
-                 'pro-view':1, 'pro-limit':1, 'buy-click':1, 'bought-return':1, 'pro-unlocked':1, 'pro-gift':1, 'csv-export':1};
+                 'pro-view':1, 'pro-limit':1, 'buy-click':1, 'bought-return':1, 'pro-unlocked':1, 'pro-gift':1, 'csv-export':1, 'share-copy':1};
 var ONCE = {}, QUEUE = [], SENDING = false, GC_READY = 0, SELFTEST = /^selftest/.test(SRC);
 var SKIPGC = (function(){ try{ return localStorage.getItem('skipgc') === 't'; }catch(e){ return false; } })();   // hand testing: count nothing
 function track(name){
@@ -1282,7 +1310,7 @@ function gate(what){
   showTab('prizes'); setTimeout(function(){ $('proSec').scrollIntoView({behavior:'smooth'}); }, 50);
   return false;
 }
-function stamp(){ return '<div class="pa-foot">' + esc(S.show.name || 'Show') + ' · printed ' + esc(new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})) + ' · made with Show Secretary, samsbench.com/show-secretary</div>'; }
+function stamp(){ return '<div class="pa-foot">' + esc(S.show.name || 'Show') + ' · printed ' + esc(new Date().toLocaleDateString('en-US', {day: 'numeric', month: 'short', year: 'numeric'})) + ' · made with Show Secretary, samsbench.com/show-secretary</div>'; }
 function doPrint(html, paper, ev){
   var a = $('printArea');
   var size = paper === 'Letter' ? 'letter' : 'A4';
@@ -1670,13 +1698,18 @@ catch(err){
   $('rawDl').onclick = function(){ try{ download(localStorage.getItem(KEY) || '', 'show-secretary-backup.json', 'application/json'); }catch(e){} };
   $('rawReset').onclick = function(){ if(confirm('Clear the saved show from this browser?')){ try{ localStorage.removeItem(KEY); }catch(e){} location.reload(); } };
 }
+$('bShare').addEventListener('click', function(){
+  var l = shareLink(), done = function(){ $('shareMsg').textContent = 'Link copied: ' + l; };
+  try{ if(navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(l).then(done, function(){ $('shareMsg').textContent = l; }); else $('shareMsg').textContent = l; }catch(e){ $('shareMsg').textContent = l; }
+  trackEver('share-copy');
+});
 $('footPro').addEventListener('click', function(e){ e.preventDefault(); track('footer-pro'); showTab('prizes'); $('proSec').scrollIntoView({behavior: 'smooth'}); });
 if(q0.get('bought') === '1' && !isPro()) setTimeout(function(){ $('proSec').scrollIntoView(); $('proKey').focus(); }, 400);
 try{ var seenPro = false; new IntersectionObserver(function(es){ es.forEach(function(x){ if(x.isIntersecting && !seenPro && !isPro()){ seenPro = true; track('pro-view'); } }); }).observe($('proSec')); }catch(e){}
 if(GC_CODE && !SKIPGC){ var gs = document.createElement('script'); gs.async = true; gs.src = '//gc.zgo.at/count.js'; gs.setAttribute('data-goatcounter', 'https://' + GC_CODE + '.goatcounter.com/count'); document.head.appendChild(gs); }
 (function(){
-  var via = (q0.get('via') || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 20), af = (q0.get('a') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
-  if(via) trackSession('via-' + via);
+  var af = (q0.get('a') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+  if(VIA_EV) trackSession('via-' + VIA_EV);
   if(af) trackSession('aff-' + af);
   if(q0.get('bought') === '1') trackSession('bought-return');
   if(hadData && (S.exhibitors.length || S.classes.length) && !S.example) trackSession('return-visit');
