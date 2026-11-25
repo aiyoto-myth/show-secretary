@@ -960,13 +960,13 @@ function renderTop(){
   $('showLine').textContent = S.show.name ? S.show.name + (S.show.date ? ' · ' + niceDate(S.show.date) : '') : 'Entries, exhibit cards, prize money and cups for your show';
   $('tally').innerHTML = '<span><b>' + S.classes.length + '</b> classes</span><span><b>' + S.exhibitors.length + '</b> exhibitors</span><span><b>' + n + '</b> entries</span>' +
     '<span>fees <b>' + money(o.totalFees) + '</b></span>' + (o.awards.length ? '<span>prizes <b>' + money(o.totalPrize) + '</b></span>' : '') +
-    ((S.exhibitors.length || S.classes.length) && !S.example ? '<span title="Saved in this browser. Save a file to keep a copy.">' + (lastFile ? 'file saved ' + new Date(lastFile).toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) : 'no file saved yet') + '</span>' : '');
+    ((S.exhibitors.length || S.classes.length) && !S.example ? '<span title="Saved in this browser. Save a file to keep a copy.">' + (lastFile ? 'file saved ' + new Date(lastFile).toLocaleDateString('en-US', {day: 'numeric', month: 'short'}) : 'no file saved yet') + '</span>' : '');
   $('exampleBar').hidden = !S.example;
   if(n >= 10 && !S.example) trackEver('ten-entries');
 }
 /* Re-rendering a table while one of its inputs has focus makes the browser fire change during removal; commit it first. */
 function flush(id){ var a = document.activeElement, el = $(id); if(a && el && el.contains(a) && a.blur) a.blur(); }
-function niceDate(d){ try{ return new Date(d + 'T12:00:00').toLocaleDateString(undefined, {day:'numeric', month:'long', year:'numeric'}); }catch(e){ return d; } }
+function niceDate(d){ try{ return new Date(d + 'T12:00:00').toLocaleDateString('en-US', {day:'numeric', month:'long', year:'numeric'}); }catch(e){ return d; } }
 
 /* ---------- 1 schedule ---------- */
 function renderSchedule(){
@@ -1282,7 +1282,7 @@ function gate(what){
   showTab('prizes'); setTimeout(function(){ $('proSec').scrollIntoView({behavior:'smooth'}); }, 50);
   return false;
 }
-function stamp(){ return '<div class="pa-foot">' + esc(S.show.name || 'Show') + ' · printed ' + esc(new Date().toLocaleDateString()) + ' · made with Show Secretary, samsbench.com/show-secretary</div>'; }
+function stamp(){ return '<div class="pa-foot">' + esc(S.show.name || 'Show') + ' · printed ' + esc(new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})) + ' · made with Show Secretary, samsbench.com/show-secretary</div>'; }
 function doPrint(html, paper, ev){
   var a = $('printArea');
   var size = paper === 'Letter' ? 'letter' : 'A4';
