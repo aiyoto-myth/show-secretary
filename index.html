@@ -59,7 +59,7 @@ section.tab[hidden]{display:none}
 .panel h2{font-size:23px;margin-bottom:8px}
 .panel h3{font-size:19px;margin:14px 0 6px}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
-label.f{display:flex;flex-direction:column;gap:3px;font-weight:700;font-size:15px;max-width:100%}
+label.f{display:flex;flex-direction:column;gap:3px;font-weight:700;font-size:15px;max-width:100%;min-width:0;overflow:hidden}
 select{max-width:100%;min-width:0}
 .row > *{min-width:0;max-width:100%}
 #rSec{max-width:min(100%,60vw)}
@@ -1022,20 +1022,20 @@ function renderSchedule(){
   $('sPaper').value = S.show.paper; $('sEqual').value = S.show.equal; $('sMulti').checked = !!S.show.multi;
   $('sNFee').value = S.show.nonMemberFee == null ? '' : (S.show.nonMemberFee / 100).toFixed(2); $('sCap').value = S.show.feeCap == null ? '' : (S.show.feeCap / 100).toFixed(2);
   $('placesBody').innerHTML = S.show.places.map(function(p, i){
-    return '<tr><td><input type="text" data-pl="label" data-i="' + i + '" value="' + esc(p.label) + '" style="width:80px"></td>' +
-      '<td><input type="text" class="money" inputmode="decimal" data-pl="money" data-i="' + i + '" value="' + (p.money / 100).toFixed(2) + '"></td>' +
-      '<td><input type="number" class="num" min="0" data-pl="pts" data-i="' + i + '" value="' + p.pts + '"></td>' +
+    return '<tr><td><input type="text" data-pl="label" data-i="' + i + '" aria-label="Place name" value="' + esc(p.label) + '" style="width:80px"></td>' +
+      '<td><input type="text" class="money" inputmode="decimal" data-pl="money" data-i="' + i + '" aria-label="Prize money for ' + esc(p.label) + '" value="' + (p.money / 100).toFixed(2) + '"></td>' +
+      '<td><input type="number" class="num" min="0" data-pl="pts" data-i="' + i + '" aria-label="Points for ' + esc(p.label) + '" value="' + p.pts + '"></td>' +
       '<td>' + (i ? '<input type="checkbox" data-pl="on" data-i="' + i + '"' + (p.off ? '' : ' checked') + ' aria-label="Use ' + esc(p.label) + '">' : '') + '</td></tr>';
   }).join('');
   var list = sortedClasses(), last = null, html = '';
   var secOpts = function(sel){ return '<option value="">(none)</option>' + S.sections.map(function(s){ return '<option value="' + s.id + '"' + (s.id === sel ? ' selected' : '') + '>' + esc(s.name) + '</option>'; }).join(''); };
   list.forEach(function(c){
     if(c.sec !== last){ last = c.sec; html += '<tr class="secHead"><td colspan="7">' + esc(secName(c.sec) || 'No section') + '</td></tr>'; }
-    html += '<tr data-c="' + c.id + '"><td data-l="Class"><input type="text" data-cf="code" value="' + esc(c.code) + '" style="width:70px"></td>' +
-      '<td class="wide" data-l="Title"><input type="text" data-cf="title" value="' + esc(c.title) + '"></td>' +
-      '<td data-l="Section"><select data-cf="sec">' + secOpts(c.sec) + '</select></td>' +
-      '<td data-l="Prize money"><input type="text" data-cf="money" placeholder="usual" value="' + esc(moneyList(c.money)) + '" style="width:120px"></td>' +
-      '<td data-l="Fee"><input type="text" data-cf="fee" class="money" placeholder="usual" value="' + (c.fee == null ? '' : (c.fee / 100).toFixed(2)) + '"></td>' +
+    html += '<tr data-c="' + c.id + '"><td data-l="Class"><input type="text" data-cf="code" aria-label="Class number" value="' + esc(c.code) + '" style="width:70px"></td>' +
+      '<td class="wide" data-l="Title"><input type="text" data-cf="title" aria-label="Class title" value="' + esc(c.title) + '"></td>' +
+      '<td data-l="Section"><select data-cf="sec" aria-label="Section">' + secOpts(c.sec) + '</select></td>' +
+      '<td data-l="Prize money"><input type="text" data-cf="money" aria-label="Prize money" placeholder="usual" value="' + esc(moneyList(c.money)) + '" style="width:120px"></td>' +
+      '<td data-l="Fee"><input type="text" data-cf="fee" aria-label="Entry fee" class="money" placeholder="usual" value="' + (c.fee == null ? '' : (c.fee / 100).toFixed(2)) + '"></td>' +
       '<td data-l="Junior"><input type="checkbox" data-cf="junior"' + (c.junior ? ' checked' : '') + ' aria-label="Junior class"></td>' +
       '<td><button class="del" data-cdel="' + c.id + '" aria-label="Delete class ' + esc(c.code) + '">×</button></td></tr>';
   });
